@@ -125,7 +125,6 @@ class DbSqlite(Db.Db):
     # return list of players
     def getPlayerList(self):
         self.c.execute('SELECT name from ' + self.config.get('Database','table_players') + ';')
-        #return [ row for row in self.c.fetchall() ]
         return list(zip(*self.c.fetchall())[0])
 
     #--------------------------------------------------------------------------
@@ -158,9 +157,10 @@ class DbSqlite(Db.Db):
     #--------------------------------------------------------------------------
     # set player stats
     #--------------------------------------------------------------------------
-    def addPlayer(self, name, rating=1000, rd=350):
+    def addPlayer(self, name, rating=1000, rd=350, t=0):
         cmd = 'INSERT into ' + self.config.get('Database','table_players') + \
-              ' (name,rating,rd) VALUES (\'' + name + '\',' + str(rating) + ',' + str(rd) + ');'
+              ' (name,rating,rd,time) VALUES (\'' +  \
+              name + '\',' + str(rating) + ',' + str(rd) + ',' + str(t) + ');'
         self.c.execute(cmd)
         self.conn.commit()
 
@@ -200,7 +200,15 @@ class DbSqlite(Db.Db):
     def getGames(self, since=0):
         self.c.execute('SELECT * from ' + self.config.get('Database','table_games') + \
                        ' WHERE (time > ' + str(since) + ');')
-        return [ row for row in self.c.fetchall() ]
+
+        games = []
+        for x in self.c.fetchall():
+            games.append({'t':x[0], \
+                          'a1':str(x[1]), 'a1_r':x[2], 'a1_rd':x[3], \
+                          'a2':str(x[4]), 'a2_r':x[5], 'a2_rd':x[6], \
+                          'b1':str(x[7]), 'b1_r':x[8], 'b1_rd':x[9], \
+                          'b2':str(x[10]),'b2_r':x[11],'b2_rd':x[12]})
+        return games
 
     # retrieve all games that had player involved in it
     def getGamesByPlayer(self, name, since):
