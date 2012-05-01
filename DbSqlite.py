@@ -80,18 +80,18 @@ class DbSqlite(Db.Db):
         f.close()
         for line in lines:
             time             = line[:10]
-            teamAwhite       = '\'' + line[11:].split(",")[0].split('(')[0] + '\''
-            teamAwhiteRating = line[11:].split(",")[0].split('(')[1].split(')')[0]
-            teamAwhiteRD     = 350
+            teamAwhite       = '\'' + line[11:].split(',')[0].split('(')[0] + '\''
+            teamAwhiteRating =        line[11:].split(',')[0].split('(')[1].split(')')[0].split('.')[0]
+            teamAwhiteRD     =        line[11:].split(',')[0].split('(')[1].split(')')[0].split('.')[1]
             teamAblack       = '\'' + line[11:].split(',')[1].split('(')[0] + '\''
-            teamAblackRating = line[11:].split(',')[1].split('(')[1].split(')')[0]
-            teamAblackRD     = 350
+            teamAblackRating =        line[11:].split(',')[1].split('(')[1].split(')')[0].split('.')[0]
+            teamAblackRD     =        line[11:].split(',')[1].split('(')[1].split(')')[0].split('.')[1] 
             teamBwhite       = '\'' + line[11:].split(',')[1].split('>')[1].split('(')[0][1:] + '\''
-            teamBwhiteRating = line[11:].split(',')[1].split('>')[1].split('(')[1].split(')')[0]
-            teamBwhiteRD     = 350
+            teamBwhiteRating =        line[11:].split(',')[1].split('>')[1].split('(')[1].split(')')[0].split('.')[0]
+            teamBwhiteRD     =        line[11:].split(',')[1].split('>')[1].split('(')[1].split(')')[0].split('.')[1]
             teamBblack       = '\'' + line[11:].split(',')[2].split('(')[0] + '\''
-            teamBblackRating = line[11:].split(',')[2].split('(')[1].split(')')[0]
-            teamBblackRD     = 350
+            teamBblackRating =        line[11:].split(',')[2].split('(')[1].split(')')[0].split('.')[0]
+            teamBblackRD     =        line[11:].split(',')[2].split('(')[1].split(')')[0].split('.')[1]
             self.genDBEntry(self.SCHEMA_GAMES, self.config.get('Database','table_games'), \
                 [time, \
                  teamAwhite, teamAwhiteRating, teamAwhiteRD, \
