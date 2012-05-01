@@ -6,14 +6,14 @@ import cgi
 import math
 import time
 import glicko
-from Db import Db
+from DbSqlite import DbSqlite
 
 #------------------------------------------------------------------------------
 # MAIN
 #------------------------------------------------------------------------------
 
 print 'Creating a database object...'
-bug_db = Db()
+bug_db = DbSqlite()
 bug_db.createDatabase()
 bug_db.createNewPlayer('Andrew Watts', 100)
 bug_db.createNewPlayer('A Potato', 200)
