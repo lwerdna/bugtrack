@@ -28,15 +28,15 @@ def getPlayersData():
 
     return [playersToRating, playersToRD]
 
-def printPlayerSelectOptions(playerToRating, initial):
+def printPlayerSelectOptions(p2r, initial):
     print "      <option></option>"
-    for player in sorted(playerToRating):
+    for player in sorted(p2r):
         print "      <option",
         
         if player == initial:
             print ' selected',
             
-        playerStr = '%s (%d)' % (player, playerToRating[player])
+        playerStr = '%s (%d)' % (player, p2r[player])
         print '>%s</option>' % playerStr
 
 def logGameResult(winner1, winner2, loser1, loser2, rateAdjWin, rateAdjLose):
@@ -63,13 +63,52 @@ def updatePlayerData(player, rating, rd):
     fp.write("\n".join(lines))
     fp.close()
 
+def calculateAdjustments(ratings, rds):
+    # winners: indices 0,1 - losers: indices 2,3
+    # calculate new score
+    winnerRating = (ratings[0] + ratings[1]) / 2;
+    winnerRD = (rds[0] + rds[1]) / 2
+    loserRating = (ratings[2] + ratings[3]) / 2
+    loserRD = (rds[2] + rds[3]) / 2
+
+    #print "glickoWinner(%d, %d)<br>\n" % (winnerRating, winnerRD)
+    glickoWinner = glicko.Player(winnerRating, winnerRD)
+    #print "glickoLoser(%d, %d)<br>\n" % (loserRating, loserRD)
+    glickoLoser = glicko.Player(loserRating, loserRD)
+           
+    #print "calculating...<br>\n"
+    glickoWinner.update_player([loserRating], [loserRD], [1])
+    #print "glickoWinner (.rating, .rd) = (%d, %d)<br>\n" % (glickoWinner.rating, glickoWinner.rd)
+    glickoLoser.update_player([winnerRating], [winnerRD], [0])
+    #print "glickoLoser (.rating, .rd) = (%d, %d)<br>\n" % (glickoLoser.rating, glickoLoser.rd)
+
+    winnerAdjRating = int(glickoWinner.rating - winnerRating)
+    winnerAdjRD = int(glickoWinner.rd - winnerRD)
+    loserAdjRating = int(glickoLoser.rating - loserRating)
+    loserAdjRD = int(glickoLoser.rd - loserRD)
+
+    # at least one point must be exchanged
+    if not winnerAdjRating:
+        winnerAdjRating = 1;
+    if not loserAdjRating:
+        loserAdjRating = -1
+
+    return [winnerAdjRating, winnerAdjRD, loserAdjRating, loserAdjRD]
+
+def stripParenScore(p):
+    # converts "Luke (796)" to "Luke"
+    m = re.match(r'^(.*) \(\d+\)$', p)
+    if m:
+        p = m.group(1)
+    return p
+
 #------------------------------------------------------------------------------
 # MAIN
 #------------------------------------------------------------------------------
 
 print "Content-Type: text/html\x0d\x0a\x0d\x0a",
 
-[playerToRating, playerToRD] = getPlayersData()
+[p2r, p2rd] = getPlayersData()
 
 form = cgi.FieldStorage()
 
@@ -78,9 +117,29 @@ defaultTeamAPlayer2 = ''
 defaultTeamBPlayer1 = ''
 defaultTeamBPlayer2 = ''
 
-op = ''
+op = 'play'
 if 'op' in form:
     op = form['op'].value
+
+if op == 'predict':
+    tAp1 = stripParenScore(form['TeamA_Player1'].value)
+    tAp2 = stripParenScore(form['TeamA_Player2'].value)
+    tBp1 = stripParenScore(form['TeamB_Player1'].value)
+    tBp2 = stripParenScore(form['TeamB_Player2'].value)
+
+    # if team A won...
+    (taAdjWin, tbAdjLose) = (0,0)
+    [taAdjWin, temp, tbAdjLose, temp] = \
+        calculateAdjustments([p2r[tAp1], p2r[tAp2], p2r[tBp1], p2r[tBp2]], \
+                            [p2rd[tAp1], p2rd[tAp2], p2rd[tBp1], p2rd[tBp2]])
+
+    # if team B won...
+    (tbAdjWin, taAdjLose) = (0,0)
+    [tbAdjWin, temp, taAdjLose, temp] = \
+        calculateAdjustments([p2r[tBp1], p2r[tBp2], p2r[tAp1], p2r[tAp2]], \
+                            [p2rd[tBp1], p2rd[tBp2], p2rd[tAp1], p2rd[tAp2]])
+
+    print "%d,%d,%d,%d" % (taAdjWin, taAdjLose, tbAdjWin, tbAdjLose),
 
 if op == 'record':
     (winner1, winner2, loser1, loser2) = ('','','','')
@@ -115,103 +174,83 @@ if op == 'record':
 
     else:
         raise "Who won?"
-    
+  
     # calculate new score
-    winnerRating = (playerToRating[winner1] + playerToRating[winner2]) / 2;
-    winnerRD = (playerToRD[winner1] + playerToRD[winner2]) / 2
-    loserRating = (playerToRating[loser1] + playerToRating[loser2]) / 2
-    loserRD = (playerToRD[loser1] + playerToRD[loser2]) / 2
+    [winnerAdjRating, winnerAdjRD, loserAdjRating, loserAdjRD] = \
+        calculateAdjustments([p2r[winner1], p2r[winner2], \
+                                p2r[loser1], p2r[loser2]], \
+                            [p2rd[winner1], p2rd[winner2], \
+                                p2rd[loser1], p2rd[loser2]])
 
-    #print "glickoWinner(%d, %d)<br>\n" % (winnerRating, winnerRD)
-    glickoWinner = glicko.Player(winnerRating, winnerRD)
-    #print "glickoLoser(%d, %d)<br>\n" % (loserRating, loserRD)
-    glickoLoser = glicko.Player(loserRating, loserRD)
-           
+    # update all players
+    updatePlayerData(winner1, p2r[winner1] + winnerAdjRating,
+        p2rd[winner1] + winnerAdjRD);
+    updatePlayerData(winner2, p2r[winner2] + winnerAdjRating,
+        p2rd[winner2] + winnerAdjRD);
 
-    #print "calculating...<br>\n"
-    glickoWinner.update_player([loserRating], [loserRD], [1])
-    #print "glickoWinner (.rating, .rd) = (%d, %d)<br>\n" % (glickoWinner.rating, glickoWinner.rd)
-    glickoLoser.update_player([winnerRating], [winnerRD], [0])
-    #print "glickoLoser (.rating, .rd) = (%d, %d)<br>\n" % (glickoLoser.rating, glickoLoser.rd)
-
-    winnerAdjRating = int(glickoWinner.rating - winnerRating)
-    winnerAdjRD = int(glickoWinner.rd - winnerRD)
-    loserAdjRating = int(glickoLoser.rating - loserRating)
-    loserAdjRD = int(glickoLoser.rd - loserRD)
-
-    # at least one point must be exchanged
-    if not winnerAdjRating:
-        winnerAdjRating = 1;
-    if not loserAdjRating:
-        loserAdjRating = -1
-
-    #print "winnerAdjRating: %d<br>\n" % winnerAdjRating
-    #print "winnerAdjRD: %d<br>\n" % winnerAdjRD
-    #print "loserAdjRating: %d<br>\n" % loserAdjRating
-    #print "loserAdjRD: %d<br>\n" % loserAdjRD 
-
-    updatePlayerData(winner1, playerToRating[winner1] + winnerAdjRating,
-        playerToRD[winner1] + winnerAdjRD);
-    updatePlayerData(winner2, playerToRating[winner2] + winnerAdjRating,
-        playerToRD[winner2] + winnerAdjRD);
-
-    updatePlayerData(loser1, playerToRating[loser1] + loserAdjRating,
-        playerToRD[loser1] + loserAdjRD);
-    updatePlayerData(loser2, playerToRating[loser2] + loserAdjRating,
-        playerToRD[loser2] + loserAdjRD);
+    updatePlayerData(loser1, p2r[loser1] + loserAdjRating,
+        p2rd[loser1] + loserAdjRD);
+    updatePlayerData(loser2, p2r[loser2] + loserAdjRating,
+        p2rd[loser2] + loserAdjRD);
 
     # log it
     logGameResult(winner1, winner2, loser1, loser2, winnerAdjRating, loserAdjRating)
 
-    [playerToRating, playerToRD] = getPlayersData()
+    # fall through to "play" mode
+    op = 'play'
+    [p2r, p2rd] = getPlayersData()
 
-print '<html>'
-print '<head>'
-print '<link rel=StyleSheet href="stylesheet.css" type="text/css">'
-print '</head>'
-print '<body>'
-print ' <form action=index.py method=post>'
-print ' <input type=hidden name="op" value="record">'
-print ' <table width="100%" cellpadding=8 cellspacing=0>'
-print '  <tr>'
-print '   <th bgcolor="#FF9797">Team A</th>'
-print '   <th bgcolor="#A9C5EB">Team B</th>'
-print '  </tr>'
-print '  <!-- team A -->'
-print '  <tr>'
-print '   <td bgcolor="#FF9797">'
-print '    <select name=TeamA_Player1>'
-printPlayerSelectOptions(playerToRating, defaultTeamAPlayer1)
-print '    </select>'
-print '   </td>'
-print '   <td bgcolor="#A9C5EB">'
-print '    <select name=TeamB_Player1>'
-printPlayerSelectOptions(playerToRating, defaultTeamBPlayer1)
-print '    </select>'
-print '   </td>'
-print '  </tr>'
-print '  <!-- team B -->'
-print '  <tr>'
-print '   <td bgcolor="#FF9797">'
-print '    <select name=TeamA_Player2>'
-printPlayerSelectOptions(playerToRating, defaultTeamAPlayer2)
-print '    </select>'
-print '   </td>'
-print '   <td bgcolor="#A9C5EB">'
-print '    <select name=TeamB_Player2>'
-printPlayerSelectOptions(playerToRating, defaultTeamBPlayer2)
-print '    </select>'
-print '   </td>'
-print '  </tr>'
-print '  <tr>'
-print '   <td bgcolor="#FF9797">'
-print '    <input name="TeamAWins" type=submit value="WIN">'
-print '   </td>'
-print '   <td bgcolor="#A9C5EB">'
-print '    <input name="TeamBWins" type=submit value="WIN">'
-print '   </td>'
-print '  </tr>'
-print ' </table>'
-print ' </form>'
-print '</body>'
-print '</html>'
+if op == 'play':
+    print '<html>'
+    print '<head>'
+    print '<link rel=StyleSheet href="stylesheet.css" type="text/css">'
+    print '<script type="text/javascript" src="./bugtrack.js"></script>'
+    print '</head>'
+    print '<body>'
+    print ' <form action=index.py method=post>'
+    print ' <input type=hidden name="op" value="record">'
+    print ' <table width="100%" cellpadding=8 cellspacing=0>'
+    print '  <tr>'
+    print '   <th bgcolor="#FF9797">Team A</th>'
+    print '   <th bgcolor="#A9C5EB">Team B</th>'
+    print '  </tr>'
+    print '  <!-- team A -->'
+    print '  <tr>'
+    print '   <td bgcolor="#FF9797">'
+    print '    <select name=TeamA_Player1 onchange=\'selChange_cb(this)\'>'
+    printPlayerSelectOptions(p2r, defaultTeamAPlayer1)
+    print '    </select>'
+    print '   </td>'
+    print '   <td bgcolor="#A9C5EB">'
+    print '    <select name=TeamB_Player1 onchange=\'selChange_cb(this)\'>'
+    printPlayerSelectOptions(p2r, defaultTeamBPlayer1)
+    print '    </select>'
+    print '   </td>'
+    print '  </tr>'
+    print '  <!-- team B -->'
+    print '  <tr>'
+    print '   <td bgcolor="#FF9797">'
+    print '    <select name=TeamA_Player2 onchange=\'selChange_cb(this)\'>'
+    printPlayerSelectOptions(p2r, defaultTeamAPlayer2)
+    print '    </select>'
+    print '   </td>'
+    print '   <td bgcolor="#A9C5EB">'
+    print '    <select name=TeamB_Player2 onchange=\'selChange_cb(this)\'>'
+    printPlayerSelectOptions(p2r, defaultTeamBPlayer2)
+    print '    </select>'
+    print '   </td>'
+    print '  </tr>'
+    print '  <tr>'
+    print '   <td bgcolor="#FF9797">'
+    print '    <input name="TeamAWins" type=submit value="WIN">'
+    print '    <span id="teamAPrediction"></span>'
+    print '   </td>'
+    print '   <td bgcolor="#A9C5EB">'
+    print '    <input name="TeamBWins" type=submit value="WIN">'
+    print '    <span id="teamBPrediction"></span>'
+    print '   </td>'
+    print '  </tr>'
+    print ' </table>'
+    print ' </form>'
+    print '</body>'
+    print '</html>'
