@@ -34,6 +34,12 @@ if __name__ == "__main__":
             db.setPlayerStats(p, [ratings[i], rds[i], ts[i]])
 
     if sys.argv[1] == "playgames":
+        
+        players = db.getPlayerList()
+
         print "playing 1000 random games"
+        for i in range(1000):
+            
+
     
 

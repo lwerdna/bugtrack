@@ -91,17 +91,62 @@ class DbText(Db.Db):
     #
     # where, by convention, teamA are the winners, teamB are the losers
     def getGames(self, since):
-        return None
+        games = []
+
+        fp = open("games.dat", 'r')
+
+        while(1):
+            line = fp.readline()
+            if not line:
+                break;
+
+            m = re.match(r'^(\d+) (.*)(\d+)\.(\d+),(.*)(\d+)\.(\d+) > (.*)(\d+)\.(\d+),(.*)(\d+)\.(\d+)$', line)
+
+            [t, \
+            teamAWhite, tawRating, tawRD, \
+            teamABlack, tabRating, tabRD, \
+            teamBWhite, tbwRating, tbwRD, \
+            teamBBlack, tbbRating, tbbRD] = map(lamda x : m.group(x+1), range(13))
+               
+            [t, tawRating, tawRD, tabRating, tabRD, tbwRating, tbwRD, tbbRating, tbbRD] = \
+                map(lambda x : int(x), [t, tawRating, tawRD, tabRating, tabRD, tbwRating, tbwRD, tbbRating, tbbRD])
+
+            games.append([t, \
+            teamAWhite, tawRating, tawRD, \
+            teamABlack, tabRating, tabRD, \
+            teamBWhite, tbwRating, tbwRD, \
+            teamBBlack, tbbRating, tbbRD])
+        
+        return games
 
     # retrieve all games that had player involved in it
     def getGamesByPlayer(self, name, since):
         return None
 
     # derp
-    def recordGame(self, t, teamAWhite, tawRating, teamABlack, tabRating, \
+    def recordGame(self, t, \
+            teamAWhite, tawRating, tawRD, \
+            teamABlack, tabRating, tabRD, \
+            teamBWhite, tbwRating, tbwRD, \
+            teamBBlack, tbbRating, tbbRD):
+
+        fp = open("games.dat", 'a')
+        fp.write("%d %s(%d.%d),%s(%d.%d) > %s(%d.%d),%s(%d.%d)\n" % (t, \
+            teamAWhite, tawRating, tawRD, \
+            teamABlack, tabRating, tabRD, \
+            teamBWhite, tbwRating, tbwRD, \
+            teamBBlack, tbbRating, tbbRD))
+
+        fp.close()
+
+        pass
+
+    def modifyGame(self, t, teamAWhite, tawRating, teamABlack, tabRating, \
             teamBWhite, tbwRating, teamBBlack, tbbRating):
 
         fp = open("games.dat", 'a')
+        lines = fp.read().split("\n")
+
         fp.write("%d %s(%d),%s(%d) > %s(%d),%s(%d)\n" % (t, teamAWhite, tawRating, \
             teamABlack, tabRating, teamBWhite, tbwRating, teamBBlack, tbbRating))
         fp.close()

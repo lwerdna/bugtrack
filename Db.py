@@ -65,6 +65,11 @@ class Db(object):
             teamBWhite, tbwRating, teamBBlack, tbbRating):
         pass
 
+    # game is uniquely identified by t
+    def modifyGame(self, t, teamAWhite, tawRating, teamABlack, tabRating, \
+            teamBWhite, tbwRating, teamBBlack, tbbRating):
+        pass
+
     #--------------------------------------------------------------------------
     # setup/testing stuff
     #--------------------------------------------------------------------------

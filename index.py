@@ -44,20 +44,12 @@ if 'op' in form:
     op = form['op'].value
 
 if op == 'predict':
-    # if a1 (with partner a2, opponents b1,b2) plays, return his <+win>,<-loss> adjustment
-
     a1 = form['a1'].value
     a2 = form['a2'].value
     b1 = form['b1'].value
     b2 = form['b2'].value
 
-    t = db.getPlayerT(a1)
-
-    ratings = map(lambda x: db.getPlayerRating(x), [a1,a2,b1,b2])
-    rds = map(lambda x: db.getPlayerRD(x), [a1,a2,b1,b2])
-
-    [winDelta, winRD] = glicko.glickoDelta(ratings, rds, int(time.time()) - t, 1)
-    [loseDelta, loseRD] = glicko.glickoDelta(ratings, rds, int(time.time()) - t, 0)
+    [winDelta, loseDelta] = rater.computeDelta(a1,a2,b1,b2)
 
     print "%d,%d" % (winDelta, loseDelta)
 
@@ -97,45 +89,14 @@ if op == 'record':
         db.getPlayerRating(winner2), loser1, db.getPlayerRating(loser1), loser2, \
         db.getPlayerRating(loser2))
 
-    #print 'winner1', winner1, '<br>\n'
-    #print 'winner2', winner2, '<br>\n'
-    #print 'loser1', loser1, '<br>\n'
-    #print 'loser2', loser2, '<br>\n'
+    # compute new scores
+    [stats1, stats2, stats3, stats4] = rater.computeGameScores(winner1, winner2, loser1, loser2)
 
-    # calculate new scores
-    ratings = map(lambda x: db.getPlayerRating(x), [winner1, winner2, loser1, loser2])
-    rds = map(lambda x: db.getPlayerRD(x), [winner1, winner2, loser1, loser2])
-    tdelta = tnow - db.getPlayerT(winner1)
-    stats1 = glicko.glicko(ratings, rds, tdelta, 1) + [tnow]
-    #print "calling glicko(", ratings, ", ", rds, ", ", tdelta, ", 1)<br>\n"
-    #print "winner1 new stats: ", stats1, '<br>\n'
-
-    ratings = map(lambda x: db.getPlayerRating(x), [winner2, winner1, loser1, loser2])
-    rds = map(lambda x: db.getPlayerRD(x), [winner2, winner1, loser1, loser2])
-    tdelta = tnow - db.getPlayerT(winner2)
-    stats2 = glicko.glicko(ratings, rds, tdelta, 1) + [tnow]
-    #print "calling glicko(", ratings, ", ", rds, ", ", tdelta, ", 1)<br>\n"
-    #print "winner2 new stats: ", stats2, '<br>\n'
-
-    ratings = map(lambda x: db.getPlayerRating(x), [loser1, loser2, winner1, winner2])
-    rds = map(lambda x: db.getPlayerRD(x), [loser1, loser2, winner2, winner1])
-    tdelta = tnow - db.getPlayerT(loser1)
-    stats3 = glicko.glicko(ratings, rds, tdelta, 0) + [tnow]
-    #print "calling glicko(", ratings, ", ", rds, ", ", tdelta, ", 0)<br>\n"
-    #print "loser1 new stats: ", stats3, '<br>\n'
-
-    ratings = map(lambda x: db.getPlayerRating(x), [loser2, loser1, winner1, winner2])
-    rds = map(lambda x: db.getPlayerRD(x), [loser2, loser1, winner1, winner2])
-    tdelta = tnow - db.getPlayerT(loser2)
-    stats4 = glicko.glicko(ratings, rds, tdelta, 0) + [tnow]
-    #print "calling glicko(", ratings, ", ", rds, ", ", tdelta, ", 0)<br>\n"
-    #print "loser2 new stats: ", stats4, '<br>\n'
-   
     # store new scores
-    db.setPlayerStats(winner1, stats1)
-    db.setPlayerStats(winner2, stats2)
-    db.setPlayerStats(loser1, stats3)
-    db.setPlayerStats(loser2, stats4)
+    db.setPlayerStats(winner1, stats1 + [tnow])
+    db.setPlayerStats(winner2, stats2 + [tnow])
+    db.setPlayerStats(loser1, stats3 + [tnow])
+    db.setPlayerStats(loser2, stats4 + [tnow])
 
     print 'OK'
 
