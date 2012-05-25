@@ -5,6 +5,14 @@
 
 import math;
 
+# we define a rating period as 1 second, and the time for a player's rating to
+# decay to a reliabily even with a a brand new player's rating (not reliable 
+# at all) as two months, or 5184000 = 60*24*3600
+# now to solve for c
+# 350 = sqrt(50^2 + c^2(5184000))
+# math.sqrt((350*350 - 250)/5184000.0)
+c = 0.023582175925925927
+
 # ratings is list where [0] is dude we're calculating for, [1] is his partner
 #  [2], [3] are the opponents
 # rds is same
@@ -13,7 +21,6 @@ import math;
 #
 def glicko(ratings, rds, t, w):
     # RD adjustment due to time
-    c = 63.2
     rd = rds[0]
     rd = math.sqrt(rd*rd + c*t)
     

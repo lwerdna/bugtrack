@@ -138,10 +138,9 @@ if op == 'predict':
 
     ratings = map(lambda x: db.getPlayerRating(x), [a1,a2,b1,b2])
     rds = map(lambda x: db.getPlayerRD(x), [a1,a2,b1,b2])
-    ts = map(lambda x: db.getPlayerT(x), [a1,a2,b1,b2])
 
-    [winDelta, winRD] = glicko.glickoDelta(ratings, rds, ts[0], 1)
-    [loseDelta, loseRD] = glicko.glickoDelta(ratings, rds, ts[0], 0)
+    [winDelta, winRD] = glicko.glickoDelta(ratings, rds, int(time.time()) - t, 1)
+    [loseDelta, loseRD] = glicko.glickoDelta(ratings, rds, int(time.time()) - t, 0)
 
     print "%d,%d" % (winDelta, loseDelta)
 
