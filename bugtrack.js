@@ -43,7 +43,10 @@ function selChange_cb(elem) {
     var elems = [elem_a1, elem_a2, elem_b1, elem_b2]
     for(var i=0; i<4; ++i) {
         if(elem != elems[i] && elem.value == elems[i].value) {
-            elems[i].value = ""
+	    /* this works in chrome, firefox */
+            elems[i].value = "";
+            /* this works in kindle fire browser */
+	    elems[i].options.selectedIndex = 0;
         }
     }
 
