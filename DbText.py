@@ -2,11 +2,12 @@
 #
 
 # example players.dat:
-# Chris 888 200
-# David 1597 162
-# Luke 746 193
-# Randy 1142 175
+# Chris Tyson 888 200 1337957171
+# David Jackson 1597 162 1337957172
+# Luke Simpson 746 193 1337957179
+# Randy Smith 1142 175 1337957199
 
+import os
 import re
 import Db
 
@@ -14,6 +15,12 @@ class DbText(Db.Db):
     def __init__(self):
         self.playerToRating = {}
         self.playerToRD = {}
+        self.playerToT = {}
+
+        for f in ['players.dat', 'games.dat']:
+            if not os.path.exists(f):
+                return
+
         self.readInPlayers();
 
     def readInPlayers(self):
@@ -23,21 +30,22 @@ class DbText(Db.Db):
 
         for l in lines:
             #print "trying to match on -%s-" % l
-            m = re.match(r'^(.*) (\d+) (\d+)$', l)
+            m = re.match(r'^(.*) (\d+) (\d+) (\d+)$', l)
 
             if not m:
                 continue
 
-            [player, rating, rd] = [m.group(1), int(m.group(2)), int(m.group(3))]
+            [player, rating, rd, t] = [m.group(1), int(m.group(2)), int(m.group(3)), int(m.group(4))]
             self.playerToRating[player] = rating
             self.playerToRD[player] = rd
+            self.playerToT[player] = t
     
     def writeOutPlayers(self):
         fp = open("players.dat", "w+")
         
         for player in self.playerToRating:
-            fp.write("%s %d %d\n" % (player, self.playerToRating[player], \
-                self.playerToRD[player]))
+            fp.write("%s %d %d %d\n" % (player, self.playerToRating[player], \
+                self.playerToRD[player], self.playerToT[player]))
         
         fp.close()
 
@@ -60,18 +68,20 @@ class DbText(Db.Db):
     def setPlayerRating(self, name, r):
         self.playerToRating[name] = r
         self.writeOutPlayers()
-        pass
 
     def setPlayerRD(self, name, rd):
         self.playerToRD[name] = r
         self.writeOutPlayers()
-        pass
+
+    def setPlayerT(self, name, t):
+        self.playerToT[name] = t
+        self.writeOutPlayers()
 
     def setPlayerStats(self, name, listStats):
         self.playerToRating[name] = listStats[0]
         self.playerToRD[name] = listStats[1]
+        self.playerToT[name] = listStats[2]
         self.writeOutPlayers()
-        pass
     
     # returns a row from the database - currently we define row as:
     # [date, teamAwhitePlayer, teamAwhitePlayerRating,

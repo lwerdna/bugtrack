@@ -85,7 +85,7 @@ function selChange_cb(elem) {
     }
 
     if(stats) {
-        e.innerHTML = stats[0] + " (RD:" + stats[1] + ")"
+        e.innerHTML = stats[0] + "." + stats[1] + ""
     }
     else {
         e.innerHTML = ""

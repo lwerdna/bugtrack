@@ -11,7 +11,7 @@ import math;
 # t is seconds since last time he played a game
 # w is 1 for win, 0 for loss
 #
-def glicko(ratings, rds, t, w)
+def glicko(ratings, rds, t, w):
     # RD adjustment due to time
     c = 63.2
     rd = rds[0]
@@ -39,6 +39,6 @@ def glicko(ratings, rds, t, w)
     # done
     return [rating, rd]
 
-def glickoDelta(ratings, rds, t, w)
+def glickoDelta(ratings, rds, t, w):
     [newRating, newRD] = glicko(ratings, rds, t, w)
     return[newRating - ratings[0], newRD - rds[0]]

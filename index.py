@@ -149,8 +149,8 @@ if op == 'predict':
 if op == 'getstats':
     player = form['player'].value
     if player in playerList:
-        [rating, rd] = db.getPlayerStats(player)
-        print "%d,%d" % (rating, rd)
+        [rating, rd, t] = db.getPlayerStats(player)
+        print "%d,%d,%d" % (rating, rd, t)
 
 if op == 'record':
     (winner1, winner2, loser1, loser2) = ('','','','')
@@ -222,12 +222,12 @@ if op == 'play':
     print ' <form action=index.py method=post>'
     print ' <input type=hidden name="op" value="record">'
     print ' <table width="100%" cellpadding=12 cellspacing=0>'
+#    print '  <tr>'
+#    print '   <th width="50%" bgcolor="#FF9797" style="color:red">Team A</th>'
+#    print '   <th width="50%" bgcolor="#A9C5EB" style="color:blue">Team B</th>'
+#    print '  </tr>'
     print '  <tr>'
-    print '   <th width="50%" bgcolor="#FF9797">Team A</th>'
-    print '   <th width="50%" bgcolor="#A9C5EB">Team B</th>'
-    print '  </tr>'
-    print '  <tr>'
-    print '   <td bgcolor="#FF9797">'
+    print '   <td width="50%" bgcolor="#FF9797">'
     print '    <div class=chessWhite>'
     print '     <select name=TeamA_Player1 onchange=\'selChange_cb(this)\'>'
     printPlayerSelectOptions(playerList, defaultTeamAPlayer1)
