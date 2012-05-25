@@ -50,8 +50,12 @@ class DbText(Db.Db):
     def getPlayerRD(self, name):
         return self.playerToRD[name]
 
+    def getPlayerT(self, name):
+        return self.playerToT[name]
+
     def getPlayerStats(self, name):
-        return [self.playerToRating[name], self.playerToRD[name]]
+        return [self.playerToRating[name], self.playerToRD[name], \
+            self.playerToT[name]]
 
     def setPlayerRating(self, name, r):
         self.playerToRating[name] = r
@@ -89,7 +93,7 @@ class DbText(Db.Db):
 
         fp = open("games.dat", 'a')
         fp.write("%d %s(%d),%s(%d) > %s(%d),%s(%d)\n" % (t, teamAWhite, tawRating, \
-            teamABlack, tabRating, teamBWhite, tbwRating, teamBBlack, tbbRating)
+            teamABlack, tabRating, teamBWhite, tbwRating, teamBBlack, tbbRating))
         fp.close()
 
         pass

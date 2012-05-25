@@ -5,45 +5,23 @@ import os
 import cgi
 import math
 import time
-import glicko
+from glicko import glicko, glickoDelta
+import DbText
 
 if ('HTTP_HOST' in os.environ) and (os.environ['HTTP_HOST'] == 'localhost'):
     import cgitb
     cgitb.enable()
 
-def getPlayersData():
-    fp = open('players.dat')
-    fpstuff = fp.read()
-    fp.close()
-
-    lines = fpstuff.split("\n")
-
-    [playersToRating, playersToRD] = [{}, {}]
-    for l in lines:
-        #print "derp -%s-" % l
-        m = re.match(r'^(.*) ([\d\.]+) ([\d\.]+)', l)
-        if m:
-            playersToRating[m.group(1)] = float(m.group(2))
-            playersToRD[m.group(1)] = float(m.group(3))
-
-    return [playersToRating, playersToRD]
-
-def printPlayerSelectOptions(p2r, initial):
+def printPlayerSelectOptions(players, initial):
     print "      <option></option>"
-    for player in sorted(p2r):
+
+    for player in sorted(players):
         print "      <option",
         
         if player == initial:
             print ' selected',
             
-        playerStr = '%s (%d)' % (player, p2r[player])
-        print '>%s</option>' % playerStr
-
-def logGameResult(winner1, winner2, loser1, loser2, rateAdjWin, rateAdjLose):
-    fp = open('games.dat', 'a')
-    dateStr = time.strftime("%a %b %d, %Y %H:%M:%S", time.gmtime(time.time() - 4*3600))
-    fp.write("[%s] %s,%s (+%d) > %s,%s (%d)\n" % (dateStr, winner1, winner2, rateAdjWin, loser1, loser2, rateAdjLose));
-    fp.close()
+        print '>%s</option>' % player
 
 def updatePlayerData(player, rating, rd):
     fp = open('players.dat')
@@ -63,7 +41,33 @@ def updatePlayerData(player, rating, rd):
     fp.write("\n".join(lines))
     fp.close()
 
-def calculateAdjustments(ratings, rds):
+# given [a1,a2,b1,b2], return rating deltas and RD deltas [[delta_r1, delta_r2, delta_r3, delta_r4],
+#  [delta_RD1, delta_RD2, delta_RD3, delta_RD4]]
+def calculateAdjustments(ratings, rds, times):
+    [delta_r1, delta_r2, delta_r3, delta_r4] = [0,0,0,0]
+    [delta_RD1, delta_RD2, delta_RD3, delta_RD4] = [0,0,0,0]
+
+    # suppose a1 wins:
+    [delta_r1, delta_RD1] = glickoDelta(ratings, rds);
+    # suppose a2 wins:
+    [ratings[0], ratings[1]] = [ratings[1], ratings[0]]
+    [rds[0], rds[1]] = [rds[1], rds[0]]
+    [times[0], times[1]] = [times[1], times[0]]
+    [delta_r2, delta_RD2] = glickoDelta(ratings, rds);
+    # suppose a3 wins:
+    ratings = ratings[2:] + ratings[:2]
+    rds = rds[2:] + rds[:2]
+    times = times[2:] + times[:2]
+    [delta_r3, delta_RD3] = glickoDelta(ratings, rds);
+    # suppose a4 wins:
+    [ratings[0], ratings[1]] = [ratings[1], ratings[0]]
+    [rds[0], rds[1]] = [rds[1], rds[0]]
+    [times[0], times[1]] = [times[1], times[0]]
+    [delta_r4, delta_RD4] = glickoDelta(ratings, rds);
+
+
+    [newRating, newRD] = glicko
+    winnerAdjRating = - ratings[0]
     # winners: indices 0,1 - losers: indices 2,3
     # calculate new score
     winnerRating = (ratings[0] + ratings[1]) / 2;
@@ -108,7 +112,8 @@ def stripParenScore(p):
 
 print "Content-Type: text/html\x0d\x0a\x0d\x0a",
 
-[p2r, p2rd] = getPlayersData()
+db = DbText.DbText()
+playerList = db.getPlayerList()
 
 form = cgi.FieldStorage()
 
@@ -130,16 +135,22 @@ if op == 'predict':
     # if team A won...
     (taAdjWin, tbAdjLose) = (0,0)
     [taAdjWin, temp, tbAdjLose, temp] = \
-        calculateAdjustments([p2r[tAp1], p2r[tAp2], p2r[tBp1], p2r[tBp2]], \
-                            [p2rd[tAp1], p2rd[tAp2], p2rd[tBp1], p2rd[tBp2]])
+        calculateAdjustments([db.getPlayerRating(tAp1), db.getPlayerRating(tAp2), db.getPlayerRating(tBp1), db.getPlayerRating(tBp2)], \
+                            [db.getPlayerRD(tAp1), db.getPlayerRD(tAp2), db.getPlayerRD(tBp1), db.getPlayerRD(tBp2)])
 
     # if team B won...
     (tbAdjWin, taAdjLose) = (0,0)
     [tbAdjWin, temp, taAdjLose, temp] = \
-        calculateAdjustments([p2r[tBp1], p2r[tBp2], p2r[tAp1], p2r[tAp2]], \
-                            [p2rd[tBp1], p2rd[tBp2], p2rd[tAp1], p2rd[tAp2]])
+        calculateAdjustments([db.getPlayerRating(tBp1), db.getPlayerRating(tBp2), db.getPlayerRating(tAp1), db.getPlayerRating(tAp2)], \
+                            [db.getPlayerRD(tBp1), db.getPlayerRD(tBp2), db.getPlayerRD(tAp1), db.getPlayerRD(tAp2)])
 
     print "%d,%d,%d,%d" % (taAdjWin, taAdjLose, tbAdjWin, tbAdjLose),
+
+if op == 'getstats':
+    player = form['player'].value
+    if player in playerList:
+        [rating, rd] = db.getPlayerStats(player)
+        print "%d,%d" % (rating, rd)
 
 if op == 'record':
     (winner1, winner2, loser1, loser2) = ('','','','')
@@ -174,31 +185,32 @@ if op == 'record':
 
     else:
         raise "Who won?"
+
+    # log it
+    db.recordGame(int(time.time()), winner1, db.getPlayerRating(winner1), winner2, \
+        db.getPlayerRating(winner2), loser1, db.getPlayerRating(loser1), loser2, \
+        db.getPlayerRating(loser2))
   
     # calculate new score
     [winnerAdjRating, winnerAdjRD, loserAdjRating, loserAdjRD] = \
-        calculateAdjustments([p2r[winner1], p2r[winner2], \
-                                p2r[loser1], p2r[loser2]], \
-                            [p2rd[winner1], p2rd[winner2], \
-                                p2rd[loser1], p2rd[loser2]])
+        calculateAdjustments([db.getPlayerRating(winner1), db.getPlayerRating(winner2), \
+                                db.getPlayerRating(loser1), db.getPlayerRating(loser2)], \
+                            [db.getPlayerRD(winner1), db.getPlayerRD(winner2), \
+                                db.getPlayerRD(loser1), db.getPlayerRD(loser2)])
 
     # update all players
-    updatePlayerData(winner1, p2r[winner1] + winnerAdjRating,
-        p2rd[winner1] + winnerAdjRD);
-    updatePlayerData(winner2, p2r[winner2] + winnerAdjRating,
-        p2rd[winner2] + winnerAdjRD);
+    updatePlayerData(winner1, db.getPlayerRating(winner1) + winnerAdjRating,
+        db.getPlayerRD(winner1) + winnerAdjRD);
+    updatePlayerData(winner2, db.getPlayerRating(winner2) + winnerAdjRating,
+        db.getPlayerRD(winner2) + winnerAdjRD);
 
-    updatePlayerData(loser1, p2r[loser1] + loserAdjRating,
-        p2rd[loser1] + loserAdjRD);
-    updatePlayerData(loser2, p2r[loser2] + loserAdjRating,
-        p2rd[loser2] + loserAdjRD);
-
-    # log it
-    logGameResult(winner1, winner2, loser1, loser2, winnerAdjRating, loserAdjRating)
+    updatePlayerData(loser1, db.getPlayerRating(loser1) + loserAdjRating,
+        db.getPlayerRD(loser1) + loserAdjRD);
+    updatePlayerData(loser2, db.getPlayerRating(loser2) + loserAdjRating,
+        db.getPlayerRD(loser2) + loserAdjRD);
 
     # fall through to "play" mode
     op = 'play'
-    [p2r, p2rd] = getPlayersData()
 
 if op == 'play':
     print '<html>'
@@ -209,35 +221,46 @@ if op == 'play':
     print '<body>'
     print ' <form action=index.py method=post>'
     print ' <input type=hidden name="op" value="record">'
-    print ' <table width="100%" cellpadding=8 cellspacing=0>'
+    print ' <table width="100%" cellpadding=12 cellspacing=0>'
     print '  <tr>'
-    print '   <th bgcolor="#FF9797">Team A</th>'
-    print '   <th bgcolor="#A9C5EB">Team B</th>'
+    print '   <th width="50%" bgcolor="#FF9797">Team A</th>'
+    print '   <th width="50%" bgcolor="#A9C5EB">Team B</th>'
     print '  </tr>'
-    print '  <!-- team A -->'
     print '  <tr>'
     print '   <td bgcolor="#FF9797">'
-    print '    <select name=TeamA_Player1 onchange=\'selChange_cb(this)\'>'
-    printPlayerSelectOptions(p2r, defaultTeamAPlayer1)
-    print '    </select>'
+    print '    <div class=chessWhite>'
+    print '     <select name=TeamA_Player1 onchange=\'selChange_cb(this)\'>'
+    printPlayerSelectOptions(playerList, defaultTeamAPlayer1)
+    print '     </select>'
+    print '     <span id=tap1_stats></span>'
+    print '    </div>'
     print '   </td>'
     print '   <td bgcolor="#A9C5EB">'
-    print '    <select name=TeamB_Player1 onchange=\'selChange_cb(this)\'>'
-    printPlayerSelectOptions(p2r, defaultTeamBPlayer1)
-    print '    </select>'
+    print '    <div class=chessBlack>'
+    print '     <select name=TeamB_Player1 onchange=\'selChange_cb(this)\'>'
+    printPlayerSelectOptions(playerList, defaultTeamBPlayer1)
+    print '     </select>'
+    print '     <span id=tbp1_stats></span>'
+    print '    </div>'
     print '   </td>'
     print '  </tr>'
     print '  <!-- team B -->'
     print '  <tr>'
     print '   <td bgcolor="#FF9797">'
-    print '    <select name=TeamA_Player2 onchange=\'selChange_cb(this)\'>'
-    printPlayerSelectOptions(p2r, defaultTeamAPlayer2)
-    print '    </select>'
+    print '    <div class=chessBlack>'
+    print '     <select name=TeamA_Player2 onchange=\'selChange_cb(this)\'>'
+    printPlayerSelectOptions(playerList, defaultTeamAPlayer2)
+    print '     </select>'
+    print '     <span id=tap2_stats></span>'
+    print '    </div>'
     print '   </td>'
     print '   <td bgcolor="#A9C5EB">'
-    print '    <select name=TeamB_Player2 onchange=\'selChange_cb(this)\'>'
-    printPlayerSelectOptions(p2r, defaultTeamBPlayer2)
-    print '    </select>'
+    print '    <div class=chessWhite>'
+    print '     <select name=TeamB_Player2 onchange=\'selChange_cb(this)\'>'
+    printPlayerSelectOptions(playerList, defaultTeamBPlayer2)
+    print '     </select>'
+    print '     <span id=tbp2_stats></span>'
+    print '    </div>'
     print '   </td>'
     print '  </tr>'
     print '  <tr>'

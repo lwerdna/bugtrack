@@ -23,7 +23,11 @@ class Db(object):
     # get the player's RD
     def getPlayerRD(self, name):
         pass
-    # return a list [rating, RD]
+    # get the player's last time played
+    def getPlayerT(self, name):
+        pass
+
+    # return a list [rating, RD, tLastPlayed]
     def getPlayerStats(self, name):
         pass
 

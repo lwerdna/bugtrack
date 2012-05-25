@@ -34,20 +34,61 @@ function debug(msg) {
  * DOM junk
  *****************************************************************************/
 function selChange_cb(elem) {
-    var elem_a1 = document.getElementsByName("TeamA_Player1")[0]
-    var elem_a2 = document.getElementsByName("TeamA_Player2")[0]
-    var elem_b1 = document.getElementsByName("TeamB_Player1")[0]
-    var elem_b2 = document.getElementsByName("TeamB_Player2")[0]
+    var elem_a1 = document.getElementsByName("TeamA_Player1")[0];
+    var elem_a2 = document.getElementsByName("TeamA_Player2")[0];
+    var elem_b1 = document.getElementsByName("TeamB_Player1")[0];
+    var elem_b2 = document.getElementsByName("TeamB_Player2")[0];
+    var elem_a1stats = document.getElementById("tap1_stats");
+    var elem_a2stats = document.getElementById("tap2_stats");
+    var elem_b1stats = document.getElementById("tbp1_stats");
+    var elem_b2stats = document.getElementById("tbp2_stats");
 
     /* force other drop downs away from the name we just selected */
-    var elems = [elem_a1, elem_a2, elem_b1, elem_b2]
+    var elems = [elem_a1, elem_a2, elem_b1, elem_b2];
+    var elems_stats = [elem_a1stats, elem_a2stats, elem_b1stats, elem_b2stats];
     for(var i=0; i<4; ++i) {
         if(elem != elems[i] && elem.value == elems[i].value) {
-	    /* this works in chrome, firefox */
+	        /* this works in chrome, firefox */
             elems[i].value = "";
             /* this works in kindle fire browser */
-	    elems[i].options.selectedIndex = 0;
+	        elems[i].options.selectedIndex = 0;
+
+            /* clear also the stats */
+            elems_stats[i].innerHTML = "";
         }
+    }
+
+    /* update statistics of the player selected */
+    if(elem.value != "") {
+        var xmlhttp = new XMLHttpRequest();
+        var reqText = "index.py?op=getstats&player=" + elem.value;
+        xmlhttp.open("GET", reqText, false);
+        xmlhttp.send()
+        stats = xmlhttp.responseText.split(",")
+    }
+    else {
+        stats = 0
+    }
+
+    var e
+    if(elem.name == "TeamA_Player1") {
+        e = document.getElementById("tap1_stats");
+    }
+    else if(elem.name == "TeamA_Player2") {
+        e = document.getElementById("tap2_stats");
+    }
+    else if(elem.name == "TeamB_Player1") {
+        e = document.getElementById("tbp1_stats");
+    }
+    else if(elem.name == "TeamB_Player2") {
+        e = document.getElementById("tbp2_stats");
+    }
+
+    if(stats) {
+        e.innerHTML = stats[0] + " (RD:" + stats[1] + ")"
+    }
+    else {
+        e.innerHTML = ""
     }
 
     /* update predictions */
