@@ -75,4 +75,3 @@ class Db(object):
     #
     def init(self):
         pass
-
