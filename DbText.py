@@ -83,6 +83,17 @@ class DbText(Db.Db):
     def getGamesByPlayer(self, name, since):
         return None
 
+    # derp
+    def recordGame(self, t, teamAWhite, tawRating, teamABlack, tabRating, \
+            teamBWhite, tbwRating, teamBBlack, tbbRating):
+
+        fp = open("games.dat", 'a')
+        fp.write("%d %s(%d),%s(%d) > %s(%d),%s(%d)\n" % (t, teamAWhite, tawRating, \
+            teamABlack, tabRating, teamBWhite, tbwRating, teamBBlack, tbbRating)
+        fp.close()
+
+        pass
+
     def init(self):
         for f in ['players.dat', 'games.dat']:
             if not os.path.exists(f):

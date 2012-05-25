@@ -57,6 +57,10 @@ class Db(object):
     def getGamesByPlayer(self, name, since):
         pass
 
+    def recordGame(self, t, teamAWhite, tawRating, teamABlack, tabRating, \
+            teamBWhite, tbwRating, teamBBlack, tbbRating):
+        pass
+
     #--------------------------------------------------------------------------
     # setup/testing stuff
     #--------------------------------------------------------------------------
