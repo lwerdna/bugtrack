@@ -23,89 +23,6 @@ def printPlayerSelectOptions(players, initial):
             
         print '>%s</option>' % player
 
-def updatePlayerData(player, rating, rd):
-    fp = open('players.dat')
-    fpdata = fp.read()
-    fp.close()
-
-    lines = fpdata.split("\n")
-
-    for i,l in enumerate(lines):
-        m = re.match('^(.*) (\d+) (\d+)$', l)
-        name = m.group(1)
-        if name == player:
-            lines[i] = '%s %d %d' % (player, rating, rd)
-            break
-
-    fp = open('players.dat', 'w+')
-    fp.write("\n".join(lines))
-    fp.close()
-
-# given [a1,a2,b1,b2], return rating deltas and RD deltas [[delta_r1, delta_r2, delta_r3, delta_r4],
-#  [delta_RD1, delta_RD2, delta_RD3, delta_RD4]]
-def calculateAdjustments(ratings, rds, times):
-    [delta_r1, delta_r2, delta_r3, delta_r4] = [0,0,0,0]
-    [delta_RD1, delta_RD2, delta_RD3, delta_RD4] = [0,0,0,0]
-
-    # suppose a1 wins:
-    [delta_r1, delta_RD1] = glicko.glickoDelta(ratings, rds);
-    # suppose a2 wins:
-    [ratings[0], ratings[1]] = [ratings[1], ratings[0]]
-    [rds[0], rds[1]] = [rds[1], rds[0]]
-    [times[0], times[1]] = [times[1], times[0]]
-    [delta_r2, delta_RD2] = glickoDelta(ratings, rds);
-    # suppose a3 wins:
-    ratings = ratings[2:] + ratings[:2]
-    rds = rds[2:] + rds[:2]
-    times = times[2:] + times[:2]
-    [delta_r3, delta_RD3] = glickoDelta(ratings, rds);
-    # suppose a4 wins:
-    [ratings[0], ratings[1]] = [ratings[1], ratings[0]]
-    [rds[0], rds[1]] = [rds[1], rds[0]]
-    [times[0], times[1]] = [times[1], times[0]]
-    [delta_r4, delta_RD4] = glickoDelta(ratings, rds);
-
-
-    [newRating, newRD] = glicko
-    winnerAdjRating = - ratings[0]
-    # winners: indices 0,1 - losers: indices 2,3
-    # calculate new score
-    winnerRating = (ratings[0] + ratings[1]) / 2;
-    winnerRD = (rds[0] + rds[1]) / 2
-    loserRating = (ratings[2] + ratings[3]) / 2
-    loserRD = (rds[2] + rds[3]) / 2
-
-    #print "glickoWinner(%d, %d)<br>\n" % (winnerRating, winnerRD)
-    glickoWinner = glicko.Player(winnerRating, winnerRD)
-    #print "glickoLoser(%d, %d)<br>\n" % (loserRating, loserRD)
-    glickoLoser = glicko.Player(loserRating, loserRD)
-           
-    #print "calculating...<br>\n"
-    glickoWinner.update_player([loserRating], [loserRD], [1])
-    #print "glickoWinner (.rating, .rd) = (%d, %d)<br>\n" % (glickoWinner.rating, glickoWinner.rd)
-    glickoLoser.update_player([winnerRating], [winnerRD], [0])
-    #print "glickoLoser (.rating, .rd) = (%d, %d)<br>\n" % (glickoLoser.rating, glickoLoser.rd)
-
-    winnerAdjRating = int(glickoWinner.rating - winnerRating)
-    winnerAdjRD = int(glickoWinner.rd - winnerRD)
-    loserAdjRating = int(glickoLoser.rating - loserRating)
-    loserAdjRD = int(glickoLoser.rd - loserRD)
-
-    # at least one point must be exchanged
-    if not winnerAdjRating:
-        winnerAdjRating = 1;
-    if not loserAdjRating:
-        loserAdjRating = -1
-
-    return [winnerAdjRating, winnerAdjRD, loserAdjRating, loserAdjRD]
-
-def stripParenScore(p):
-    # converts "Luke (796)" to "Luke"
-    m = re.match(r'^(.*) \(\d+\)$', p)
-    if m:
-        p = m.group(1)
-    return p
-
 #------------------------------------------------------------------------------
 # MAIN
 #------------------------------------------------------------------------------
@@ -157,16 +74,6 @@ if op == 'record':
     b1 = form['b1'].value
     b2 = form['b2'].value
 
-    a1 = re.sub(r' \(\d.*$', '', a1)
-    a2 = re.sub(r' \(\d.*$', '', a2)
-    b1 = re.sub(r' \(\d.*$', '', b1)
-    b2 = re.sub(r' \(\d.*$', '', b2)
-
-    #print("a1: ", a1);
-    #print("a2: ", a2);
-    #print("b1: ", b1);
-    #print("b2: ", b2);
-
     if 'TeamAWins' in form:
         (winner1, winner2, loser1, loser2) = \
             (a1, a2, b1, b2)
@@ -184,31 +91,53 @@ if op == 'record':
     else:
         raise "Who won?"
 
-    # log it
-    db.recordGame(int(time.time()), winner1, db.getPlayerRating(winner1), winner2, \
+    # log game
+    tnow = int(time.time())
+    db.recordGame(tnow, winner1, db.getPlayerRating(winner1), winner2, \
         db.getPlayerRating(winner2), loser1, db.getPlayerRating(loser1), loser2, \
         db.getPlayerRating(loser2))
-  
-    # calculate new score
-    [winnerAdjRating, winnerAdjRD, loserAdjRating, loserAdjRD] = \
-        calculateAdjustments([db.getPlayerRating(winner1), db.getPlayerRating(winner2), \
-                                db.getPlayerRating(loser1), db.getPlayerRating(loser2)], \
-                            [db.getPlayerRD(winner1), db.getPlayerRD(winner2), \
-                                db.getPlayerRD(loser1), db.getPlayerRD(loser2)])
 
-    # update all players
-    updatePlayerData(winner1, db.getPlayerRating(winner1) + winnerAdjRating,
-        db.getPlayerRD(winner1) + winnerAdjRD);
-    updatePlayerData(winner2, db.getPlayerRating(winner2) + winnerAdjRating,
-        db.getPlayerRD(winner2) + winnerAdjRD);
+    #print 'winner1', winner1, '<br>\n'
+    #print 'winner2', winner2, '<br>\n'
+    #print 'loser1', loser1, '<br>\n'
+    #print 'loser2', loser2, '<br>\n'
 
-    updatePlayerData(loser1, db.getPlayerRating(loser1) + loserAdjRating,
-        db.getPlayerRD(loser1) + loserAdjRD);
-    updatePlayerData(loser2, db.getPlayerRating(loser2) + loserAdjRating,
-        db.getPlayerRD(loser2) + loserAdjRD);
+    # calculate new scores
+    ratings = map(lambda x: db.getPlayerRating(x), [winner1, winner2, loser1, loser2])
+    rds = map(lambda x: db.getPlayerRD(x), [winner1, winner2, loser1, loser2])
+    tdelta = tnow - db.getPlayerT(winner1)
+    stats1 = glicko.glicko(ratings, rds, tdelta, 1) + [tnow]
+    #print "calling glicko(", ratings, ", ", rds, ", ", tdelta, ", 1)<br>\n"
+    #print "winner1 new stats: ", stats1, '<br>\n'
 
-    # fall through to "play" mode
-    op = 'play'
+    ratings = map(lambda x: db.getPlayerRating(x), [winner2, winner1, loser1, loser2])
+    rds = map(lambda x: db.getPlayerRD(x), [winner2, winner1, loser1, loser2])
+    tdelta = tnow - db.getPlayerT(winner2)
+    stats2 = glicko.glicko(ratings, rds, tdelta, 1) + [tnow]
+    #print "calling glicko(", ratings, ", ", rds, ", ", tdelta, ", 1)<br>\n"
+    #print "winner2 new stats: ", stats2, '<br>\n'
+
+    ratings = map(lambda x: db.getPlayerRating(x), [loser1, loser2, winner1, winner2])
+    rds = map(lambda x: db.getPlayerRD(x), [loser1, loser2, winner2, winner1])
+    tdelta = tnow - db.getPlayerT(loser1)
+    stats3 = glicko.glicko(ratings, rds, tdelta, 0) + [tnow]
+    #print "calling glicko(", ratings, ", ", rds, ", ", tdelta, ", 0)<br>\n"
+    #print "loser1 new stats: ", stats3, '<br>\n'
+
+    ratings = map(lambda x: db.getPlayerRating(x), [loser2, loser1, winner1, winner2])
+    rds = map(lambda x: db.getPlayerRD(x), [loser2, loser1, winner1, winner2])
+    tdelta = tnow - db.getPlayerT(loser2)
+    stats4 = glicko.glicko(ratings, rds, tdelta, 0) + [tnow]
+    #print "calling glicko(", ratings, ", ", rds, ", ", tdelta, ", 0)<br>\n"
+    #print "loser2 new stats: ", stats4, '<br>\n'
+   
+    # store new scores
+    db.setPlayerStats(winner1, stats1)
+    db.setPlayerStats(winner2, stats2)
+    db.setPlayerStats(loser1, stats3)
+    db.setPlayerStats(loser2, stats4)
+
+    print 'OK'
 
 if op == 'play':
     print '<html>'
@@ -217,13 +146,13 @@ if op == 'play':
     print '<script type="text/javascript" src="./bugtrack.js"></script>'
     print '</head>'
     print '<body>'
-    print ' <form action=index.py method=post>'
+    #print ' <form action=index.py method=post>'
     print ' <input type=hidden name="op" value="record">'
     print ' <table width="100%" cellpadding=12 cellspacing=0>'
-#    print '  <tr>'
-#    print '   <th width="50%" bgcolor="#FF9797" style="color:red">Team A</th>'
-#    print '   <th width="50%" bgcolor="#A9C5EB" style="color:blue">Team B</th>'
-#    print '  </tr>'
+    print '  <tr>'
+    print '   <th width="50%" bgcolor="#FF9797">Team A</th>'
+    print '   <th width="50%" bgcolor="#A9C5EB">Team B</th>'
+    print '  </tr>'
     print '  <tr>'
     print '   <td width="50%" bgcolor="#FF9797">'
     print '    <div class=chessWhite>'
@@ -267,13 +196,13 @@ if op == 'play':
     print '  </tr>'
     print '  <tr>'
     print '   <td bgcolor="#FF9797">'
-    print '    <input name="TeamAWins" type=submit value="WIN">'
+    print '    <input name="TeamAWins" type=submit value="WIN" onClick="recordGame(this)">'
     print '   </td>'
     print '   <td bgcolor="#A9C5EB">'
-    print '    <input name="TeamBWins" type=submit value="WIN">'
+    print '    <input name="TeamBWins" type=submit value="WIN" onClick="recordGame(this)">'
     print '   </td>'
     print '  </tr>'
     print ' </table>'
-    print ' </form>'
+    #print ' </form>'
     print '</body>'
     print '</html>'

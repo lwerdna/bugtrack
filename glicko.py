@@ -23,7 +23,8 @@ def glicko(ratings, rds, t, w):
     # RD adjustment due to time
     rd = rds[0]
     rd = math.sqrt(rd*rd + c*t)
-    
+    rd = min(rd, 350)
+
     # attenuating factor
     p = .0000025180996504909944  # 3*math.log(10)*math.log(10) / (math.pi*math.pi * 800 * 800)
     f = 1/math.sqrt(1 + p*(rds[1]*rds[1] + rds[2]*rds[2] + rds[3]*rds[3]))
@@ -48,4 +49,4 @@ def glicko(ratings, rds, t, w):
 
 def glickoDelta(ratings, rds, t, w):
     [newRating, newRD] = glicko(ratings, rds, t, w)
-    return[newRating - ratings[0], newRD - rds[0]]
+    return [newRating - ratings[0], newRD - rds[0]]

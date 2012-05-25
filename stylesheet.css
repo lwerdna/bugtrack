@@ -8,6 +8,11 @@ body {
     background-color: #F5F4EB;
 }
 
+th {
+    font-size: large;
+    text-align: left;
+}
+
 select {
     font-size: xx-large;
 }

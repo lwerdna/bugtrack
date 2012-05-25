@@ -33,6 +33,8 @@ function debug(msg) {
 /******************************************************************************
  * DOM junk
  *****************************************************************************/
+
+
 function selChange_cb(elem) {
     var elem_a1 = document.getElementsByName("a1")[0];
     var elem_a2 = document.getElementsByName("a2")[0];
@@ -132,5 +134,53 @@ function selChange_cb(elem) {
             elems_predict[i].innerHTML = ""
         }
     }
+}
+
+function recordGame(elem) {
+    var elem_a1 = document.getElementsByName("a1")[0];
+    var elem_a2 = document.getElementsByName("a2")[0];
+    var elem_b1 = document.getElementsByName("b1")[0];
+    var elem_b2 = document.getElementsByName("b2")[0];
+
+    var xmlhttp = new XMLHttpRequest();
+    var req = "?op=record&a1=" + elem_a1.value + "&a2=" + elem_a2.value +
+              "&b1=" + elem_b1.value + "&b2=" + elem_b2.value;
+
+    if(elem.name == "TeamAWins") {
+        req += "&TeamAWins=1"
+    }
+    else if(elem.name == "TeamBWins") {
+        req += "&TeamBWins=1"
+    }
+
+    debug("AJAX: " + req);
+    xmlhttp.open("GET", req, false);
+    xmlhttp.send();
+    debug("AJAX: " + xmlhttp.responseText);
+
+    if(elem.name == "TeamAWins") {
+        alert("Win for " + elem_a1.value + " and " + elem_a2.value + " recorded!");
+
+        /* clear out opposing team */
+        elem_b1.value = "";
+	    elem_b1.options.selectedIndex = 0;
+        elem_b2.value = "";
+	    elem_b2.options.selectedIndex = 0;
+    }
+    else if(elem.name == "TeamBWins") {
+        alert("Win for " + elem_b1.value + " and " + elem_b2.value + " recorded!");
+
+        /* clear out opposing team */
+        elem_a1.value = "";
+	    elem_a1.options.selectedIndex = 0;
+        elem_a2.value = "";
+	    elem_a2.options.selectedIndex = 0;
+    }
+
+    /* refresh selections */
+    selChange_cb(elem_a1);
+    selChange_cb(elem_a2);
+    selChange_cb(elem_b1);
+    selChange_cb(elem_b2);
 }
 
