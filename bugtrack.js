@@ -34,18 +34,26 @@ function debug(msg) {
  * DOM junk
  *****************************************************************************/
 function selChange_cb(elem) {
-    var elem_a1 = document.getElementsByName("TeamA_Player1")[0];
-    var elem_a2 = document.getElementsByName("TeamA_Player2")[0];
-    var elem_b1 = document.getElementsByName("TeamB_Player1")[0];
-    var elem_b2 = document.getElementsByName("TeamB_Player2")[0];
-    var elem_a1stats = document.getElementById("tap1_stats");
-    var elem_a2stats = document.getElementById("tap2_stats");
-    var elem_b1stats = document.getElementById("tbp1_stats");
-    var elem_b2stats = document.getElementById("tbp2_stats");
+    var elem_a1 = document.getElementsByName("a1")[0];
+    var elem_a2 = document.getElementsByName("a2")[0];
+    var elem_b1 = document.getElementsByName("b1")[0];
+    var elem_b2 = document.getElementsByName("b2")[0];
+
+    var elem_a1stats = document.getElementById("a1_stats");
+    var elem_a2stats = document.getElementById("a2_stats");
+    var elem_b1stats = document.getElementById("b1_stats");
+    var elem_b2stats = document.getElementById("b2_stats");
+
+    var elem_a1predict = document.getElementById("a1_predict");
+    var elem_a2predict = document.getElementById("a2_predict");
+    var elem_b1predict = document.getElementById("b1_predict");
+    var elem_b2predict = document.getElementById("b2_predict");
 
     /* force other drop downs away from the name we just selected */
     var elems = [elem_a1, elem_a2, elem_b1, elem_b2];
     var elems_stats = [elem_a1stats, elem_a2stats, elem_b1stats, elem_b2stats];
+    var elems_predict = [elem_a1predict, elem_a2predict, elem_b1predict, elem_b2predict];
+
     for(var i=0; i<4; ++i) {
         if(elem != elems[i] && elem.value == elems[i].value) {
 	        /* this works in chrome, firefox */
@@ -62,63 +70,67 @@ function selChange_cb(elem) {
     if(elem.value != "") {
         var xmlhttp = new XMLHttpRequest();
         var reqText = "index.py?op=getstats&player=" + elem.value;
+        debug("AJAX: " + reqText)
         xmlhttp.open("GET", reqText, false);
         xmlhttp.send()
-        stats = xmlhttp.responseText.split(",")
+        var resp = xmlhttp.responseText;
+        debug("AJAX: " + resp)
+        stats = resp.split(",")
     }
     else {
         stats = 0
     }
 
-    var e
-    if(elem.name == "TeamA_Player1") {
-        e = document.getElementById("tap1_stats");
-    }
-    else if(elem.name == "TeamA_Player2") {
-        e = document.getElementById("tap2_stats");
-    }
-    else if(elem.name == "TeamB_Player1") {
-        e = document.getElementById("tbp1_stats");
-    }
-    else if(elem.name == "TeamB_Player2") {
-        e = document.getElementById("tbp2_stats");
-    }
-
+    var enameToElemStats = new Array()
+    enameToElemStats["a1"] = elem_a1stats;
+    enameToElemStats["a2"] = elem_a2stats;
+    enameToElemStats["b1"] = elem_b1stats;
+    enameToElemStats["b2"] = elem_b2stats;
     if(stats) {
-        e.innerHTML = stats[0] + "." + stats[1] + ""
+        enameToElemStats[elem.name].innerHTML = stats[0] + "." + stats[1]
     }
     else {
-        e.innerHTML = ""
+        enameToElemStats[elem.name] = ""
     }
 
-    /* update predictions */
-    var elem_predictA = document.getElementById("teamAPrediction")
-    var elem_predictB = document.getElementById("teamBPrediction")
-
+    /**************************************************************************
+        update predictions
+    **************************************************************************/
     if(elem_a1.value && elem_a2.value && elem_b1.value && elem_b2.value) {
-        /* ajax a request back to the script */
-        var xmlhttp = new XMLHttpRequest();
-        // document.location.pathname is everything after the url
-        // eg: "http://localhost:2048/index.html"
-        //   -> document.location.pathname is "/index.html" (including slash)
-        var reqText = "index.py?op=predict" + 
-            "&TeamA_Player1=" + elem_a1.value + "&TeamA_Player2=" + elem_a2.value + 
-            "&TeamB_Player1=" + elem_b1.value + "&TeamB_Player2=" + elem_b2.value
+        var temp;
+        var resp;
 
-        xmlhttp.open("GET", reqText, false);
-        // xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-        xmlhttp.send();
+        var reqs = [
+            /* a1 wins/loses */
+            "index.py?op=predict&a1=" + elem_a1.value + "&a2=" + elem_a2.value + 
+                "&b1=" + elem_b1.value + "&b2=" + elem_b2.value,
+            /* a2 wins/loses */
+            "index.py?op=predict&a1=" + elem_a2.value + "&a2=" + elem_a1.value + 
+                "&b1=" + elem_b1.value + "&b2=" + elem_b2.value,
+            /* b1 wins/loses */
+            "index.py?op=predict&a1=" + elem_b1.value + "&a2=" + elem_b2.value + 
+                "&b1=" + elem_a1.value + "&b2=" + elem_a2.value,
+            /* b2 wins/loses */
+            "index.py?op=predict&a1=" + elem_b2.value + "&a2=" + elem_b1.value + 
+                "&b1=" + elem_a1.value + "&b2=" + elem_a2.value,
+        ];
 
-        var resp = xmlhttp.responseText;
-        resp = resp.replace(/[\r\n]$/, "")
-        vals = resp.split(",")
-
-        elem_predictA.innerHTML = "<font color=green>+" + vals[0] + "</font> (opp. gets " + vals[3] + ")"
-        elem_predictB.innerHTML = "<font color=green>+" + vals[2] + "</font> (opp. gets " + vals[1] + ")"
+        for(var i=0; i<4; ++i) {
+            var xmlhttp = new XMLHttpRequest();
+            debug("AJAX: " + reqs[i])
+            xmlhttp.open("GET", reqs[i], false);
+            xmlhttp.send()
+            var resp = xmlhttp.responseText
+            debug("AJAX: " + resp)
+            resp.replace(/[\r\n]$/, "")
+            vals = resp.split(",")
+            elems_predict[i].innerHTML = "<font color=green>+" + vals[0] + "</font> <font color=red>" + vals[1] + "</font>"
+        }
     }
     else {
-        elem_predictA.innerHTML = ""
-        elem_predictB.innerHTML = ""
+        for(var i=0; i<4; ++i) {
+            elems_predict[i].innerHTML = ""
+        }
     }
 }
 

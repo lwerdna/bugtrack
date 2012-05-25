@@ -5,7 +5,7 @@ import os
 import cgi
 import math
 import time
-from glicko import glicko, glickoDelta
+import glicko
 import DbText
 
 if ('HTTP_HOST' in os.environ) and (os.environ['HTTP_HOST'] == 'localhost'):
@@ -48,7 +48,7 @@ def calculateAdjustments(ratings, rds, times):
     [delta_RD1, delta_RD2, delta_RD3, delta_RD4] = [0,0,0,0]
 
     # suppose a1 wins:
-    [delta_r1, delta_RD1] = glickoDelta(ratings, rds);
+    [delta_r1, delta_RD1] = glicko.glickoDelta(ratings, rds);
     # suppose a2 wins:
     [ratings[0], ratings[1]] = [ratings[1], ratings[0]]
     [rds[0], rds[1]] = [rds[1], rds[0]]
@@ -127,24 +127,23 @@ if 'op' in form:
     op = form['op'].value
 
 if op == 'predict':
-    tAp1 = stripParenScore(form['TeamA_Player1'].value)
-    tAp2 = stripParenScore(form['TeamA_Player2'].value)
-    tBp1 = stripParenScore(form['TeamB_Player1'].value)
-    tBp2 = stripParenScore(form['TeamB_Player2'].value)
+    # if a1 (with partner a2, opponents b1,b2) plays, return his <+win>,<-loss> adjustment
 
-    # if team A won...
-    (taAdjWin, tbAdjLose) = (0,0)
-    [taAdjWin, temp, tbAdjLose, temp] = \
-        calculateAdjustments([db.getPlayerRating(tAp1), db.getPlayerRating(tAp2), db.getPlayerRating(tBp1), db.getPlayerRating(tBp2)], \
-                            [db.getPlayerRD(tAp1), db.getPlayerRD(tAp2), db.getPlayerRD(tBp1), db.getPlayerRD(tBp2)])
+    a1 = form['a1'].value
+    a2 = form['a2'].value
+    b1 = form['b1'].value
+    b2 = form['b2'].value
 
-    # if team B won...
-    (tbAdjWin, taAdjLose) = (0,0)
-    [tbAdjWin, temp, taAdjLose, temp] = \
-        calculateAdjustments([db.getPlayerRating(tBp1), db.getPlayerRating(tBp2), db.getPlayerRating(tAp1), db.getPlayerRating(tAp2)], \
-                            [db.getPlayerRD(tBp1), db.getPlayerRD(tBp2), db.getPlayerRD(tAp1), db.getPlayerRD(tAp2)])
+    t = db.getPlayerT(a1)
 
-    print "%d,%d,%d,%d" % (taAdjWin, taAdjLose, tbAdjWin, tbAdjLose),
+    ratings = map(lambda x: db.getPlayerRating(x), [a1,a2,b1,b2])
+    rds = map(lambda x: db.getPlayerRD(x), [a1,a2,b1,b2])
+    ts = map(lambda x: db.getPlayerT(x), [a1,a2,b1,b2])
+
+    [winDelta, winRD] = glicko.glickoDelta(ratings, rds, ts[0], 1)
+    [loseDelta, loseRD] = glicko.glickoDelta(ratings, rds, ts[0], 0)
+
+    print "%d,%d" % (winDelta, loseDelta)
 
 if op == 'getstats':
     player = form['player'].value
@@ -154,34 +153,34 @@ if op == 'getstats':
 
 if op == 'record':
     (winner1, winner2, loser1, loser2) = ('','','','')
-    teamA_Player1 = form['TeamA_Player1'].value
-    teamA_Player2 = form['TeamA_Player2'].value
-    teamB_Player1 = form['TeamB_Player1'].value
-    teamB_Player2 = form['TeamB_Player2'].value
+    a1 = form['a1'].value
+    a2 = form['a2'].value
+    b1 = form['b1'].value
+    b2 = form['b2'].value
 
-    teamA_Player1 = re.sub(r' \(\d.*$', '', teamA_Player1)
-    teamA_Player2 = re.sub(r' \(\d.*$', '', teamA_Player2)
-    teamB_Player1 = re.sub(r' \(\d.*$', '', teamB_Player1)
-    teamB_Player2 = re.sub(r' \(\d.*$', '', teamB_Player2)
+    a1 = re.sub(r' \(\d.*$', '', a1)
+    a2 = re.sub(r' \(\d.*$', '', a2)
+    b1 = re.sub(r' \(\d.*$', '', b1)
+    b2 = re.sub(r' \(\d.*$', '', b2)
 
-    #print("teamA_Player1: ", teamA_Player1);
-    #print("teamA_Player2: ", teamA_Player2);
-    #print("teamB_Player1: ", teamB_Player1);
-    #print("teamB_Player2: ", teamB_Player2);
+    #print("a1: ", a1);
+    #print("a2: ", a2);
+    #print("b1: ", b1);
+    #print("b2: ", b2);
 
     if 'TeamAWins' in form:
         (winner1, winner2, loser1, loser2) = \
-            (teamA_Player1, teamA_Player2, teamB_Player1, teamB_Player2)
+            (a1, a2, b1, b2)
 
-        defaultTeamAPlayer1 = teamA_Player1
-        defaultTeamAPlayer2 = teamA_Player2
+        defaultTeamAPlayer1 = a1
+        defaultTeamAPlayer2 = a2
 
     elif 'TeamBWins' in form:
         (winner1, winner2, loser1, loser2) = \
-            (teamB_Player1, teamB_Player2, teamA_Player1, teamA_Player2)
+            (b1, b2, a1, a2)
 
-        defaultTeamBPlayer1 = teamB_Player1
-        defaultTeamBPlayer2 = teamB_Player2
+        defaultTeamBPlayer1 = b1
+        defaultTeamBPlayer2 = b2
 
     else:
         raise "Who won?"
@@ -229,18 +228,20 @@ if op == 'play':
     print '  <tr>'
     print '   <td width="50%" bgcolor="#FF9797">'
     print '    <div class=chessWhite>'
-    print '     <select name=TeamA_Player1 onchange=\'selChange_cb(this)\'>'
+    print '     <select name=a1 onchange=\'selChange_cb(this)\'>'
     printPlayerSelectOptions(playerList, defaultTeamAPlayer1)
     print '     </select>'
-    print '     <span id=tap1_stats></span>'
+    print '     <span id=a1_stats></span>'
+    print '     <span class="predict" id=a1_predict></span>'
     print '    </div>'
     print '   </td>'
     print '   <td bgcolor="#A9C5EB">'
     print '    <div class=chessBlack>'
-    print '     <select name=TeamB_Player1 onchange=\'selChange_cb(this)\'>'
+    print '     <select name=b1 onchange=\'selChange_cb(this)\'>'
     printPlayerSelectOptions(playerList, defaultTeamBPlayer1)
     print '     </select>'
-    print '     <span id=tbp1_stats></span>'
+    print '     <span id=b1_stats></span>'
+    print '     <span class="predict" id=b1_predict></span>'
     print '    </div>'
     print '   </td>'
     print '  </tr>'
@@ -248,29 +249,29 @@ if op == 'play':
     print '  <tr>'
     print '   <td bgcolor="#FF9797">'
     print '    <div class=chessBlack>'
-    print '     <select name=TeamA_Player2 onchange=\'selChange_cb(this)\'>'
+    print '     <select name=a2 onchange=\'selChange_cb(this)\'>'
     printPlayerSelectOptions(playerList, defaultTeamAPlayer2)
     print '     </select>'
-    print '     <span id=tap2_stats></span>'
+    print '     <span id=a2_stats></span>'
+    print '     <span class="predict" id=a2_predict></span>'
     print '    </div>'
     print '   </td>'
     print '   <td bgcolor="#A9C5EB">'
     print '    <div class=chessWhite>'
-    print '     <select name=TeamB_Player2 onchange=\'selChange_cb(this)\'>'
+    print '     <select name=b2 onchange=\'selChange_cb(this)\'>'
     printPlayerSelectOptions(playerList, defaultTeamBPlayer2)
     print '     </select>'
-    print '     <span id=tbp2_stats></span>'
+    print '     <span id=b2_stats></span>'
+    print '     <span class="predict" id=b2_predict></span>'
     print '    </div>'
     print '   </td>'
     print '  </tr>'
     print '  <tr>'
     print '   <td bgcolor="#FF9797">'
     print '    <input name="TeamAWins" type=submit value="WIN">'
-    print '    <span id="teamAPrediction"></span>'
     print '   </td>'
     print '   <td bgcolor="#A9C5EB">'
     print '    <input name="TeamBWins" type=submit value="WIN">'
-    print '    <span id="teamBPrediction"></span>'
     print '   </td>'
     print '  </tr>'
     print ' </table>'

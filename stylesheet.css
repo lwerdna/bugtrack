@@ -24,6 +24,10 @@ table {
     font-size: xx-large;
 }
 
+span.predict {
+    font-size: large;
+}
+
 div.chessWhite {
     color: black;
     background-color: white;
