@@ -96,17 +96,17 @@ class DbText(Db.Db):
         fp = open("games.dat", 'r')
 
         while(1):
-            line = fp.readline()
+            line = fp.readline().rstrip()
             if not line:
                 break;
 
-            m = re.match(r'^(\d+) (.*)(\d+)\.(\d+),(.*)(\d+)\.(\d+) > (.*)(\d+)\.(\d+),(.*)(\d+)\.(\d+)$', line)
+            m = re.match(r'^(\d+) (.*)\((\d+)\.(\d+)\),(.*)\((\d+)\.(\d+)\) > (.*)\((\d+)\.(\d+)\),(.*)\((\d+)\.(\d+)\)$', line)
 
             [t, \
             teamAWhite, tawRating, tawRD, \
             teamABlack, tabRating, tabRD, \
             teamBWhite, tbwRating, tbwRD, \
-            teamBBlack, tbbRating, tbbRD] = map(lamda x : m.group(x+1), range(13))
+            teamBBlack, tbbRating, tbbRD] = map(lambda x : m.group(x+1), range(13))
                
             [t, tawRating, tawRD, tabRating, tabRD, tbwRating, tbwRD, tbbRating, tbbRD] = \
                 map(lambda x : int(x), [t, tawRating, tawRD, tabRating, tabRD, tbwRating, tbwRD, tbbRating, tbbRD])
@@ -116,7 +116,8 @@ class DbText(Db.Db):
             teamABlack, tabRating, tabRD, \
             teamBWhite, tbwRating, tbwRD, \
             teamBBlack, tbbRating, tbbRD])
-        
+       
+            print "appended!\n"
         return games
 
     # retrieve all games that had player involved in it
@@ -158,4 +159,10 @@ class DbText(Db.Db):
             if not os.path.exists(f):
                 fp = open(f, 'w+')
                 fp.close()
+
+    def clear(self):
+        for f in ['players.dat', 'games.dat']:
+            fp = open(f, "w+")
+            fp.close()
+        
 

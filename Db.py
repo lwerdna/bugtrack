@@ -80,3 +80,6 @@ class Db(object):
     #
     def init(self):
         pass
+
+    def clear(self):
+        pass

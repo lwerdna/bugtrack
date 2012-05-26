@@ -49,7 +49,11 @@ if op == 'predict':
     b1 = form['b1'].value
     b2 = form['b2'].value
 
-    [winDelta, loseDelta] = rater.computeDelta(a1,a2,b1,b2)
+    ratings = map(lambda x: db.getPlayerRating(x), [a1,a2,b1,b2])
+    rds = map(lambda x: db.getPlayerRD(x), [a1,a2,b1,b2])
+    ts = map(lambda x: db.getPlayerT(x), [a1,a2,b1,b2])
+
+    [winDelta, loseDelta] = glicko.calcRatingWinLossDeltaPlayer(ratings, rds, ts)
 
     print "%d,%d" % (winDelta, loseDelta)
 
@@ -67,36 +71,31 @@ if op == 'record':
     b2 = form['b2'].value
 
     if 'TeamAWins' in form:
-        (winner1, winner2, loser1, loser2) = \
-            (a1, a2, b1, b2)
-
-        defaultTeamAPlayer1 = a1
-        defaultTeamAPlayer2 = a2
-
+        pass
     elif 'TeamBWins' in form:
-        (winner1, winner2, loser1, loser2) = \
-            (b1, b2, a1, a2)
-
-        defaultTeamBPlayer1 = b1
-        defaultTeamBPlayer2 = b2
-
+        [a1,a2,b1,b2] = [b2,b1,a2,a1]
     else:
         raise "Who won?"
 
-    # log game
+    ratings = map(lambda x: db.getPlayerRating(x), [a1,a2,b1,b2])
+    rds = map(lambda x: db.getPlayerRD(x), [a1,a2,b1,b2])
     tnow = int(time.time())
-    db.recordGame(tnow, winner1, db.getPlayerRating(winner1), winner2, \
-        db.getPlayerRating(winner2), loser1, db.getPlayerRating(loser1), loser2, \
-        db.getPlayerRating(loser2))
+    tds = map(lambda x: tnow - db.getPlayerT(x), [a1,a2,b1,b2])
+
+    # log game
+    db.recordGame(tnow, \
+        a1, ratings[0], rds[0], a2, ratings[1], rds[1],
+        b1, ratings[2], rds[2], b2, ratings[3], rds[3],
+    )
 
     # compute new scores
-    [stats1, stats2, stats3, stats4] = rater.computeGameScores(winner1, winner2, loser1, loser2)
+    [stats1, stats2, stats3, stats4] = rater.calcGameScores(ratings, rds, tds)
 
     # store new scores
-    db.setPlayerStats(winner1, stats1 + [tnow])
-    db.setPlayerStats(winner2, stats2 + [tnow])
-    db.setPlayerStats(loser1, stats3 + [tnow])
-    db.setPlayerStats(loser2, stats4 + [tnow])
+    db.setPlayerStats(a1, stats1 + [tnow])
+    db.setPlayerStats(a2, stats2 + [tnow])
+    db.setPlayerStats(b1, stats3 + [tnow])
+    db.setPlayerStats(b2, stats4 + [tnow])
 
     print 'OK'
 
