@@ -80,16 +80,19 @@ if op == 'record':
     ratings = map(lambda x: db.getPlayerRating(x), [a1,a2,b1,b2])
     rds = map(lambda x: db.getPlayerRD(x), [a1,a2,b1,b2])
     tnow = int(time.time())
-    tds = map(lambda x: tnow - db.getPlayerT(x), [a1,a2,b1,b2])
+    tds = map(lambda x: glicko.secToRatingPeriods(tnow - db.getPlayerT(x)), [a1,a2,b1,b2])
 
     # log game
-    db.recordGame(tnow, \
-        a1, ratings[0], rds[0], a2, ratings[1], rds[1],
-        b1, ratings[2], rds[2], b2, ratings[3], rds[3],
-    )
+    db.recordGame({
+        't': tnow, 
+        'a1':a1, 'a1_r':ratings[0], 'a1_rd':rds[0],
+        'a2':a2, 'a2_r':ratings[1], 'a2_rd':rds[1],
+        'b1':b1, 'b1_r':ratings[2], 'b1_rd':rds[2],
+        'b2':b2, 'b2_r':ratings[3], 'b2_rd':rds[3]
+    })
 
     # compute new scores
-    [stats1, stats2, stats3, stats4] = rater.calcGameScores(ratings, rds, tds)
+    [stats1, stats2, stats3, stats4] = glicko.calcGameScores(ratings, rds, tds)
 
     # store new scores
     db.setPlayerStats(a1, stats1 + [tnow])

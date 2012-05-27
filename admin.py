@@ -16,9 +16,44 @@ if __name__ == "__main__":
         print "send arguments!"
         exit(-1)
 
+    if sys.argv[1] == "recalculate":
+        players = db.getPlayerList()
+        games = db.getGames()
+        db.init()
+        db.clear()
+
+        for p in players:
+            db.addPlayer(p)
+
+        for g in games:
+            ratings = map(lambda x: db.getPlayerRating(x), [g['a1'], g['a2'], g['b1'], g['b2']])
+            rds = map(lambda x: db.getPlayerRD(x), [g['a1'], g['a2'], g['b1'], g['b2']])
+            rps = map(lambda x: glicko.secToRatingPeriods(g['t'] - db.getPlayerT(x)), [g['a1'], g['a2'], g['b1'], g['b2']])
+            
+            # log game
+            data = {
+                't':g['t'], 
+                'a1':g['a1'], 'a1_r':ratings[0], 'a1_rd':rds[0],
+                'a2':g['a2'], 'a2_r':ratings[1], 'a2_rd':rds[1],
+                'b1':g['b1'], 'b1_r':ratings[2], 'b1_rd':rds[2],
+                'b2':g['b2'], 'b2_r':ratings[3], 'b2_rd':rds[3]
+            }
+            print data
+            db.recordGame(data)
+        
+            # compute new scores
+            [stats1, stats2, stats3, stats4] = glicko.calcGameScores(ratings, rds, rps)
+       
+            # store new scores
+            db.setPlayerStats(g['a1'], stats1 + [g['t']])
+            db.setPlayerStats(g['a2'], stats2 + [g['t']])
+            db.setPlayerStats(g['b1'], stats3 + [g['t']])
+            db.setPlayerStats(g['b2'], stats4 + [g['t']])
+
     if sys.argv[1] == "dumpgames":
         games = db.getGames(0)
-        print games
+        for g in games:
+            print g
 
     if sys.argv[1] == "seeddb" or sys.argv[1] == "dbseed":
         # virtual time point one year ago
@@ -36,8 +71,10 @@ if __name__ == "__main__":
                     "James Madison", "James Monroe", "John Quincy Adams",
                     "Andrew Jackson"];
 
-        ratings = map(lambda x: random.randint(500,1500), range(len(players)))
-        rds = map(lambda x: 350, range(len(players)))
+        #ratings = map(lambda x: random.randint(500,1500), range(len(players)))
+        ratings = [1000]*len(players)
+        #rds = map(lambda x: 350, range(len(players)))
+        rds = [350]*len(players)
 
         for i,p in enumerate(players):
             print "%s %d.%d (last game: %s))" % \
@@ -48,8 +85,6 @@ if __name__ == "__main__":
         #######################################################################
         # new games
         #######################################################################
-
-
         players = db.getPlayerList()
 
         print "playing 1000 random games"
@@ -73,13 +108,15 @@ if __name__ == "__main__":
             rps = map(lambda x: glicko.secToRatingPeriods(tnow - db.getPlayerT(x)), [a1,a2,b1,b2])
             
             # log game
-            db.recordGame(tnow, \
-                a1, ratings[0], rds[0], a2, ratings[1], rds[1],
-                b1, ratings[2], rds[2], b2, ratings[3], rds[3],
-            )
-        
+            db.recordGame({
+                't': tnow, 
+                'a1':a1, 'a1_r':ratings[0], 'a1_rd':rds[0],
+                'a2':a2, 'a2_r':ratings[1], 'a2_rd':rds[1],
+                'b1':b1, 'b1_r':ratings[2], 'b1_rd':rds[2],
+                'b2':b2, 'b2_r':ratings[3], 'b2_rd':rds[3]
+            })
+
             # compute new scores
-            print "rps: ", rps
             [stats1, stats2, stats3, stats4] = glicko.calcGameScores(ratings, rds, rps)
         
             # store new scores

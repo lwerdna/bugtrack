@@ -34,6 +34,8 @@ class Db(object):
     #--------------------------------------------------------------------------
     # set player stats
     #--------------------------------------------------------------------------
+    def addPlayer(self, name, rating, rd):
+        pass
     def setPlayerRating(self, name, r):
         pass
     def setPlayerRD(self, name, rd):
@@ -61,8 +63,7 @@ class Db(object):
     def getGamesByPlayer(self, name, since):
         pass
 
-    def recordGame(self, t, teamAWhite, tawRating, teamABlack, tabRating, \
-            teamBWhite, tbwRating, teamBBlack, tbbRating):
+    def recordGame(self, data):
         pass
 
     # game is uniquely identified by t
