@@ -100,69 +100,98 @@ if op == 'record':
     print 'OK'
 
 if op == 'play':
-    print '<html>'
-    print '<head>'
-    print '<link rel=StyleSheet href="stylesheet.css" type="text/css">'
-    print '<script type="text/javascript" src="./bugtrack.js"></script>'
-    print '</head>'
-    print '<body>'
-    #print ' <form action=index.py method=post>'
-    print ' <input type=hidden name="op" value="record">'
-    print ' <table width="100%" cellpadding=12 cellspacing=0>'
-    print '  <tr>'
-    print '   <th width="50%" bgcolor="#FF9797">Team A</th>'
-    print '   <th width="50%" bgcolor="#A9C5EB">Team B</th>'
-    print '  </tr>'
-    print '  <tr>'
-    print '   <td width="50%" bgcolor="#FF9797">'
-    print '    <div class=chessWhite>'
-    print '     <select name=a1 onchange=\'selChange_cb(this)\'>'
+
+    print """
+<html>
+<head>
+  <title></title>
+  <link rel=StyleSheet href="stylesheet.css" type="text/css" />
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+  <script type="text/javascript" src="./bugtrack.js"></script>
+</head>
+<body>
+<!--  <form action="index.py" method="post"> -->
+    <input type="hidden" name="op" value="record" />
+    <table>
+      <colgroup class="teamA" />
+      <colgroup class="transition" />
+      <colgroup class="teamB" />
+<!--      <tr><th>Team A</th><th></th><th>Team B</th></tr> -->
+      <tr>
+        <th><button name="TeamAWins" type="button" onclick="recordGame(this)">Team A</button></th>
+        <td></td>
+        <th><button name="TeamBWins" type="button" onclick="recordGame(this)">Team B</button></th>
+      </tr>
+      <tr>
+        <td>
+          <div class="player chessWhite">
+            <select name="a1">
+    """
     printPlayerSelectOptions(playerList, defaultTeamAPlayer1)
-    print '     </select>'
-    print '     <span id=a1_stats></span>'
-    print '     <span class="predict" id=a1_predict></span>'
-    print '    </div>'
-    print '   </td>'
-    print '   <td bgcolor="#A9C5EB">'
-    print '    <div class=chessBlack>'
-    print '     <select name=b1 onchange=\'selChange_cb(this)\'>'
+    print """
+            </select><br />
+            <span class="stats" id="a1_stats"></span>
+            <span class="predict" id="a1_predict"></span>
+          </div>
+        </td>
+        <td class="transition"><button name="SwapA1B1" type="button" onclick="swapPlayers(this)">&#x21c4;</button>
+        </td>
+        <td>
+          <div class="player chessBlack">
+            <select name="b1">
+    """
     printPlayerSelectOptions(playerList, defaultTeamBPlayer1)
-    print '     </select>'
-    print '     <span id=b1_stats></span>'
-    print '     <span class="predict" id=b1_predict></span>'
-    print '    </div>'
-    print '   </td>'
-    print '  </tr>'
-    print '  <!-- team B -->'
-    print '  <tr>'
-    print '   <td bgcolor="#FF9797">'
-    print '    <div class=chessBlack>'
-    print '     <select name=a2 onchange=\'selChange_cb(this)\'>'
+    print """
+            </select><br />
+            <span class="stats" id="b1_stats"></span>
+            <span class="predict" id="b1_predict"></span>
+          </div>
+        </td>
+      </tr>
+      <!-- transition row containing player swap buttons within teams -->
+      <tr class="buttonRow">
+        <td>
+          <button name="SwapA1A2" type="button" onclick="swapPlayers(this)">&#x21c5;</button>&emsp;
+          <button name="ClearTeamA" type="button" onclick="clearPlayers(this)">clear</button>
+        </td>
+        <td class="transition"><!--<button name="ClearPlayers" type="button" onclick="">clear</button>--></td>
+        <td>
+          <button name="SwapB1B2" type="button" onclick="swapPlayers(this)">&#x21c5;</button>&emsp;
+          <button name="ClearTeamB" type="button" onclick="clearPlayers(this)">clear</button>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <div class="player chessBlack">
+            <select name="a2">
+    """
     printPlayerSelectOptions(playerList, defaultTeamAPlayer2)
-    print '     </select>'
-    print '     <span id=a2_stats></span>'
-    print '     <span class="predict" id=a2_predict></span>'
-    print '    </div>'
-    print '   </td>'
-    print '   <td bgcolor="#A9C5EB">'
-    print '    <div class=chessWhite>'
-    print '     <select name=b2 onchange=\'selChange_cb(this)\'>'
+    print """
+            </select><br />
+            <span class="stats" id="a2_stats"></span>
+            <span class="predict" id="a2_predict"></span>
+          </div>
+        </td>
+        <td class="transition"><button name="SwapA2B2" type="button" onclick="swapPlayers(this)">&#x21c4;</button></td>
+        <td>
+          <div class="player chessWhite">
+            <select name="b2">
+    """
     printPlayerSelectOptions(playerList, defaultTeamBPlayer2)
-    print '     </select>'
-    print '     <span id=b2_stats></span>'
-    print '     <span class="predict" id=b2_predict></span>'
-    print '    </div>'
-    print '   </td>'
-    print '  </tr>'
-    print '  <tr>'
-    print '   <td bgcolor="#FF9797">'
-    print '    <input name="TeamAWins" type=submit value="WIN" onClick="recordGame(this)">'
-    print '   </td>'
-    print '   <td bgcolor="#A9C5EB">'
-    print '    <input name="TeamBWins" type=submit value="WIN" onClick="recordGame(this)">'
-    print '   </td>'
-    print '  </tr>'
-    print ' </table>'
-    #print ' </form>'
-    print '</body>'
-    print '</html>'
+    print """
+            </select><br />
+            <span class="stats" id="b2_stats"></span>
+            <span class="predict" id="b2_predict"></span>
+          </div>
+        </td>
+      </tr>
+<!--      <tr class="buttonRow">
+        <td><button name="TeamAWins" type="button" onclick="recordGame(this)">WIN</button></td>
+        <td></td>
+        <td><button name="TeamBWins" type="button" onclick="recordGame(this)">WIN</button></td>
+      </tr> -->
+    </table>
+<!--  </form> -->
+</body>
+</html>
+    """
