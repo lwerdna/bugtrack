@@ -3,6 +3,7 @@
 # typed up while reading:
 # http://www.freechess.org/Help/HelpFiles/glicko.html
 
+import time;
 import math;
 
 # Glicko says this works best when rating period has player playing "moderate" 5-10 games
@@ -86,14 +87,14 @@ def calcRatingRdPlayer(ratings, rds, rps, w):
     return [rating, rd]
 
 def calcRatingRdDeltaPlayer(ratings, rds, t, w):
-    [newRating, newRD] = glicko(ratings, rds, t, w)
+    [newRating, newRD] = calcRatingRdPlayer(ratings, rds, t, w)
     return [newRating - ratings[0], newRD - rds[0]]
 
 # if a1 (with partner a2, opponents b1,b2) plays, return his <+win>,<-loss> adjustment
 # returns [winDelta, loseDelta]
 def calcRatingWinLossDeltaPlayer(ratings, rds, ts):
-    [winDelta, winRD] = calcRatingRDDelta_player(ratings, rds, int(time.time()) - ts[0], 1)
-    [loseDelta, loseRD] = glicko.glickoDelta(ratings, rds, int(time.time()) - ts[0], 0)
+    [winDelta, winRD] = calcRatingRdDeltaPlayer(ratings, rds, secToRatingPeriods(int(time.time()) - ts[0]), 1)
+    [loseDelta, loseRD] = calcRatingRdDeltaPlayer(ratings, rds, secToRatingPeriods(int(time.time()) - ts[0]), 0)
     #print "%d,%d" % (winDelta, loseDelta)
     return [winDelta, loseDelta]
 

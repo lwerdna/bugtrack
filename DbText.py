@@ -24,6 +24,10 @@ class DbText(Db.Db):
         self.readInPlayers();
 
     def readInPlayers(self):
+        self.playerToRating = {}
+        self.playerToRD = {}
+        self.playerToT = {}
+
         fp = open("players.dat")
         lines = fp.read().split("\n")
         fp.close()
@@ -82,6 +86,9 @@ class DbText(Db.Db):
         self.playerToRD[name] = listStats[1]
         self.playerToT[name] = listStats[2]
         self.writeOutPlayers()
+
+    def addPlayer(self, name, rating=1000, rd=350):
+        self.setPlayerStats(name, [rating, rd, 0])
     
     # returns a row from the database - currently we define row as:
     # [date, teamAwhitePlayer, teamAwhitePlayerRating,
@@ -90,7 +97,7 @@ class DbText(Db.Db):
     #        teamBblackPlayer, teamBblackPlayerRating]
     #
     # where, by convention, teamA are the winners, teamB are the losers
-    def getGames(self, since):
+    def getGames(self, since=0):
         games = []
 
         fp = open("games.dat", 'r')
@@ -100,58 +107,45 @@ class DbText(Db.Db):
             if not line:
                 break;
 
+            print "tryign to match -%s-" % line
             m = re.match(r'^(\d+) (.*)\((\d+)\.(\d+)\),(.*)\((\d+)\.(\d+)\) > (.*)\((\d+)\.(\d+)\),(.*)\((\d+)\.(\d+)\)$', line)
 
             [t, \
             teamAWhite, tawRating, tawRD, \
             teamABlack, tabRating, tabRD, \
-            teamBWhite, tbwRating, tbwRD, \
-            teamBBlack, tbbRating, tbbRD] = map(lambda x : m.group(x+1), range(13))
+            teamBBlack, tbbRating, tbbRD, \
+            teamBWhite, tbwRating, tbwRD ] = map(lambda x : m.group(x+1), range(13))
                
             [t, tawRating, tawRD, tabRating, tabRD, tbwRating, tbwRD, tbbRating, tbbRD] = \
                 map(lambda x : int(x), [t, tawRating, tawRD, tabRating, tabRD, tbwRating, tbwRD, tbbRating, tbbRD])
 
-            games.append([t, \
-            teamAWhite, tawRating, tawRD, \
-            teamABlack, tabRating, tabRD, \
-            teamBWhite, tbwRating, tbwRD, \
-            teamBBlack, tbbRating, tbbRD])
+            games.append({'t':t, \
+            'a1':teamAWhite, 'a1_r':tawRating, 'a1_rd':tawRD, \
+            'a2':teamABlack, 'a2_r':tabRating, 'a2_rd':tabRD, \
+            'b1':teamBBlack, 'b1_r':tbbRating, 'b1_rd':tbbRD, \
+            'b2':teamBWhite, 'b2_r':tbwRating, 'b2_rd':tbwRD})
        
-            print "appended!\n"
         return games
 
     # retrieve all games that had player involved in it
-    def getGamesByPlayer(self, name, since):
+    def getGamesByPlayer(self, name, since=0):
         return None
 
-    # derp
-    def recordGame(self, t, \
-            teamAWhite, tawRating, tawRD, \
-            teamABlack, tabRating, tabRD, \
-            teamBWhite, tbwRating, tbwRD, \
-            teamBBlack, tbbRating, tbbRD):
-
+    # record game
+    def recordGame(self, data):
         fp = open("games.dat", 'a')
-        fp.write("%d %s(%d.%d),%s(%d.%d) > %s(%d.%d),%s(%d.%d)\n" % (t, \
-            teamAWhite, tawRating, tawRD, \
-            teamABlack, tabRating, tabRD, \
-            teamBWhite, tbwRating, tbwRD, \
-            teamBBlack, tbbRating, tbbRD))
+        fp.write("%d %s(%d.%d),%s(%d.%d) > %s(%d.%d),%s(%d.%d)\n" % (data['t'], \
+            data['a1'], data['a1_r'], data['a1_rd'], \
+            data['a2'], data['a2_r'], data['a2_rd'], \
+            data['b1'], data['b1_r'], data['b1_rd'], \
+            data['b2'], data['b2_r'], data['b2_rd'] \
+        ))
 
         fp.close()
 
         pass
 
-    def modifyGame(self, t, teamAWhite, tawRating, teamABlack, tabRating, \
-            teamBWhite, tbwRating, teamBBlack, tbbRating):
-
-        fp = open("games.dat", 'a')
-        lines = fp.read().split("\n")
-
-        fp.write("%d %s(%d),%s(%d) > %s(%d),%s(%d)\n" % (t, teamAWhite, tawRating, \
-            teamABlack, tabRating, teamBWhite, tbwRating, teamBBlack, tbbRating))
-        fp.close()
-
+    def modifyGame(self, data):
         pass
 
     def init(self):
@@ -160,9 +154,14 @@ class DbText(Db.Db):
                 fp = open(f, 'w+')
                 fp.close()
 
+        self.readInPlayers()
+
     def clear(self):
+        
         for f in ['players.dat', 'games.dat']:
             fp = open(f, "w+")
             fp.close()
+
+        self.readInPlayers()
         
 
