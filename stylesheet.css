@@ -16,39 +16,36 @@ table {
     border-collapse: collapse;
 }
 
-td, th {
+tr.playerRow td {
     padding: 0.5em;
 }
 
-th {
-    padding-top: 1em;
-}
 
+th {
+    padding-top: 0.5em;
+}
+/*
 tr:last-child td {
     padding-bottom: 1em;
 }
+*/
 
 colgroup.teamA {
     background-color: #FF9797;
-    width: 45%;
 }
 
 colgroup.teamB {
     background-color: #A9C5EB;
-    width: 45%;
 }
 
-tr.buttonRow td {
+tr.buttonRow td, tr.playerRow td.transition {
     text-align: center;
     vertical-align: middle;
-}
-
-td.transition {
-    text-align: center;
+    padding: 0;
 }
 
 colgroup.transition {
-    width: 10%;
+    width: 2%;
 
     /* Cross-browser gradients created at: http://gradients.glrzad.com/ */
     background-image: linear-gradient(left , #FF9797 25%, #A9C4EB 75%);
@@ -82,6 +79,9 @@ colgroup.transition {
 
 div.player select {
     display: block;
+    margin: 0;
+    width: 100%;
+    font-size: 140%;
 }
 
 span.stats {

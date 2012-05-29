@@ -108,9 +108,9 @@ if op == 'play':
 <html>
 <head>
   <title></title>
-  <link rel=StyleSheet href="stylesheet.css" type="text/css" />
+  <link rel=StyleSheet href="/stylesheet.css" type="text/css" />
   <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js" type="text/javascript" charset="utf-8"></script>
-  <script type="text/javascript" src="./bugtrack.js"></script>
+  <script type="text/javascript" src="/bugtrack.js"></script>
 </head>
 <body>
 <!--  <form action="index.py" method="post"> -->
@@ -120,12 +120,12 @@ if op == 'play':
       <colgroup class="transition" />
       <colgroup class="teamB" />
 <!--      <tr><th>Team A</th><th></th><th>Team B</th></tr> -->
-      <tr>
+      <tr class="headerRow">
         <th><button name="TeamAWins" type="button" onclick="recordGame(this)">Team A</button></th>
-        <td></td>
+        <td class="transition"></td>
         <th><button name="TeamBWins" type="button" onclick="recordGame(this)">Team B</button></th>
       </tr>
-      <tr>
+      <tr class="playerRow">
         <td>
           <div class="player chessWhite">
             <select name="a1">
@@ -163,7 +163,7 @@ if op == 'play':
           <button name="ClearTeamB" type="button" onclick="clearPlayers(this)">clear</button>
         </td>
       </tr>
-      <tr>
+      <tr class="playerRow">
         <td>
           <div class="player chessBlack">
             <select name="a2">
@@ -190,7 +190,7 @@ if op == 'play':
       </tr>
 <!--      <tr class="buttonRow">
         <td><button name="TeamAWins" type="button" onclick="recordGame(this)">WIN</button></td>
-        <td></td>
+        <td class="transition"></td>
         <td><button name="TeamBWins" type="button" onclick="recordGame(this)">WIN</button></td>
       </tr> -->
     </table>
