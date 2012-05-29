@@ -158,25 +158,6 @@ function recordGame(elem) {
     xmlhttp.send();
     debug("AJAX: " + xmlhttp.responseText);
 
-    if(elem.name == "TeamAWins") {
-        alert("Win for " + elem_a1.value + " and " + elem_a2.value + " recorded!");
-
-        /* clear out opposing team */
-        elem_b1.value = "";
-	    elem_b1.options.selectedIndex = 0;
-        elem_b2.value = "";
-	    elem_b2.options.selectedIndex = 0;
-    }
-    else if(elem.name == "TeamBWins") {
-        alert("Win for " + elem_b1.value + " and " + elem_b2.value + " recorded!");
-
-        /* clear out opposing team */
-        elem_a1.value = "";
-	    elem_a1.options.selectedIndex = 0;
-        elem_a2.value = "";
-	    elem_a2.options.selectedIndex = 0;
-    }
-
     /* refresh selections */
     selChange_cb(elem_a1);
     selChange_cb(elem_a2);
