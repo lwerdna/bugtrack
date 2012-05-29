@@ -7,7 +7,7 @@ body {
 }
 
 * {
-    font-size: 102%;
+    font-size: 101%;
 }
 
 table {
@@ -83,6 +83,7 @@ div.player {
 
 div.player select {
     width: 100%;
+    margin-bottom: 0.25em;
 }
 
 span.stats {
@@ -92,4 +93,42 @@ span.stats {
 span.predict {
     float: right;
     font-size: 80%;
+}
+
+
+/*-----------------------------------------------------------------------------
+ * Styles for buttons/input/select elements. Based on:
+ * http://37signals.com/svn/posts/2609-customizing-web-forms-with-css3-and-webkit
+ */
+
+input, select, button {
+    border: 1px solid #555;
+    padding: 0.25em 0.5em;
+    line-height: 1.2em;
+    background: #fff;
+    background: -webkit-gradient(linear, left top, left bottom, from(#fff), to(#ccc));
+    -webkit-appearance: none;
+    -webkit-box-shadow: 1px 1px 1px #fff;
+    -webkit-border-radius: 0.35em;
+}
+
+/* activated (pressed) button effect */
+input:active, select:active, button:active {
+    outline: none;
+    border: 1px solid #058cf5;
+    background: #ccc;
+    background: -webkit-gradient(linear, left top, left bottom, from(#aaa), to(#ddd));
+}
+
+input:focus, select:focus, button:focus {
+    outline: none;
+    border: 1px solid #058cf5;
+}
+
+/* rounded pill-style buttons */
+input[type=submit], button {
+    width: auto;
+    border-radius: 2em;
+    padding: 0.25em 1em;
+    line-height: 1.5em;
 }
