@@ -107,7 +107,7 @@ class DbText(Db.Db):
             if not line:
                 break;
 
-            print "tryign to match -%s-" % line
+            #print "trying to match -%s-" % line
             m = re.match(r'^(\d+) (.*)\((\d+)\.(\d+)\),(.*)\((\d+)\.(\d+)\) > (.*)\((\d+)\.(\d+)\),(.*)\((\d+)\.(\d+)\)$', line)
 
             [t, \

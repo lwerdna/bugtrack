@@ -97,7 +97,7 @@ function selChange_cb(elem) {
     /* update statistics of the player selected */
     if(elem.value != "") {
         var xmlhttp = new XMLHttpRequest();
-        var reqText = "index.py?op=getstats&player=" + elem.value;
+        var reqText = "play.py?op=getstats&player=" + elem.value;
         debug("AJAX: " + reqText)
         xmlhttp.open("GET", reqText, false);
         xmlhttp.send()
@@ -130,16 +130,16 @@ function selChange_cb(elem) {
 
         var reqs = [
             /* a1 wins/loses */
-            "index.py?op=predict&a1=" + elem_a1.value + "&a2=" + elem_a2.value + 
+            "play.py?op=predict&a1=" + elem_a1.value + "&a2=" + elem_a2.value + 
                 "&b1=" + elem_b1.value + "&b2=" + elem_b2.value,
             /* a2 wins/loses */
-            "index.py?op=predict&a1=" + elem_a2.value + "&a2=" + elem_a1.value + 
+            "play.py?op=predict&a1=" + elem_a2.value + "&a2=" + elem_a1.value + 
                 "&b1=" + elem_b1.value + "&b2=" + elem_b2.value,
             /* b1 wins/loses */
-            "index.py?op=predict&a1=" + elem_b1.value + "&a2=" + elem_b2.value + 
+            "play.py?op=predict&a1=" + elem_b1.value + "&a2=" + elem_b2.value + 
                 "&b1=" + elem_a1.value + "&b2=" + elem_a2.value,
             /* b2 wins/loses */
-            "index.py?op=predict&a1=" + elem_b2.value + "&a2=" + elem_b1.value + 
+            "play.py?op=predict&a1=" + elem_b2.value + "&a2=" + elem_b1.value + 
                 "&b1=" + elem_a1.value + "&b2=" + elem_a2.value,
         ];
 
@@ -186,26 +186,66 @@ function recordGame(elem) {
 
     if(elem.name == "TeamAWins") {
         alert("Win for " + elem_a1.value + " and " + elem_a2.value + " recorded!");
-
-        /* clear out opposing team */
-        elem_b1.value = "";
-	    elem_b1.options.selectedIndex = 0;
-        elem_b2.value = "";
-	    elem_b2.options.selectedIndex = 0;
     }
     else if(elem.name == "TeamBWins") {
         alert("Win for " + elem_b1.value + " and " + elem_b2.value + " recorded!");
-
-        /* clear out opposing team */
-        elem_a1.value = "";
-	    elem_a1.options.selectedIndex = 0;
-        elem_a2.value = "";
-	    elem_a2.options.selectedIndex = 0;
     }
 
     /* refresh selections */
     selChange_cb(elem_a1);
     selChange_cb(elem_a2);
+    selChange_cb(elem_b1);
+    selChange_cb(elem_b2);
+}
+
+function swapTeamA(elem)
+{
+    var elem_a1 = document.getElementsByName("a1")[0];
+    var elem_a2 = document.getElementsByName("a2")[0];
+
+    var temp = elem_a1.value;
+    elem_a1.value = elem_a2.value;
+    elem_a2.value = temp;
+
+    selChange_cb(elem_a1);
+    selChange_cb(elem_a2);
+
+}
+
+function clearTeamA(elem)
+{
+    var elem_a1 = document.getElementsByName("a1")[0];
+    var elem_a2 = document.getElementsByName("a2")[0];
+
+    elem_a1.value = ""
+    elem_a2.value = ""
+
+    selChange_cb(elem_a1);
+    selChange_cb(elem_a2);
+}
+
+function swapTeamB(elem)
+{
+    var elem_b1 = document.getElementsByName("b1")[0];
+    var elem_b2 = document.getElementsByName("b2")[0];
+
+    var temp = elem_b1.value;
+    elem_b1.value = elem_b2.value;
+    elem_b2.value = temp;
+
+    selChange_cb(elem_b1);
+    selChange_cb(elem_b2);
+
+}
+
+function clearTeamB(elem)
+{
+    var elem_b1 = document.getElementsByName("b1")[0];
+    var elem_b2 = document.getElementsByName("b2")[0];
+
+    elem_b1.value = ""
+    elem_b2.value = ""
+
     selChange_cb(elem_b1);
     selChange_cb(elem_b2);
 }
