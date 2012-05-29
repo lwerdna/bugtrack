@@ -71,7 +71,7 @@ function selChange_cb(elem) {
     /* update statistics of the player selected */
     if(elem.value != "") {
         var xmlhttp = new XMLHttpRequest();
-        var reqText = "index.py?op=getstats&player=" + elem.value;
+        var reqText = "play.py?op=getstats&player=" + elem.value;
         debug("AJAX: " + reqText)
         xmlhttp.open("GET", reqText, false);
         xmlhttp.send()
@@ -104,16 +104,16 @@ function selChange_cb(elem) {
 
         var reqs = [
             /* a1 wins/loses */
-            "index.py?op=predict&a1=" + elem_a1.value + "&a2=" + elem_a2.value + 
+            "play.py?op=predict&a1=" + elem_a1.value + "&a2=" + elem_a2.value + 
                 "&b1=" + elem_b1.value + "&b2=" + elem_b2.value,
             /* a2 wins/loses */
-            "index.py?op=predict&a1=" + elem_a2.value + "&a2=" + elem_a1.value + 
+            "play.py?op=predict&a1=" + elem_a2.value + "&a2=" + elem_a1.value + 
                 "&b1=" + elem_b1.value + "&b2=" + elem_b2.value,
             /* b1 wins/loses */
-            "index.py?op=predict&a1=" + elem_b1.value + "&a2=" + elem_b2.value + 
+            "play.py?op=predict&a1=" + elem_b1.value + "&a2=" + elem_b2.value + 
                 "&b1=" + elem_a1.value + "&b2=" + elem_a2.value,
             /* b2 wins/loses */
-            "index.py?op=predict&a1=" + elem_b2.value + "&a2=" + elem_b1.value + 
+            "play.py?op=predict&a1=" + elem_b2.value + "&a2=" + elem_b1.value + 
                 "&b1=" + elem_a1.value + "&b2=" + elem_a2.value,
         ];
 

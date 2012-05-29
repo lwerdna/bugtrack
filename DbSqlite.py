@@ -150,7 +150,7 @@ class DbSqlite(Db.Db):
 
     # return a list [rating, RD]
     def getPlayerStats(self, name):
-        self.c.execute('SELECT rating,rd from ' + self.config.get('Database','table_players') + \
+        self.c.execute('SELECT rating,rd,time from ' + self.config.get('Database','table_players') + \
                        ' WHERE (name = \'' + name + '\');')
         return [ row for row in self.c.fetchall() ][0]
 
@@ -247,7 +247,7 @@ class DbSqlite(Db.Db):
             createDB = 0
 
         # Connect to database
-        print 'Connecting to database [' + dbFile + ']...'
+        #print 'Connecting to database [' + dbFile + ']...'
         self.conn = sqlite3.connect(dbFile)
         self.c = self.conn.cursor()
 

@@ -18,6 +18,19 @@ if __name__ == "__main__":
         print "send arguments!"
         exit(-1)
 
+    if sys.argv[1] == "DbText2DbSqlite":
+        db = DbText.DbText();
+        db2 = DbSqlite.DbSqlite();
+        db2.clear()
+
+        # add all players
+        for p in db.getPlayerList():
+            db2.addPlayer(p, db.getPlayerRating(p), db.getPlayerRD(p), db.getPlayerT(p))
+
+        # add all games
+        for g in db.getGames():
+            db2.recordGame(g)
+
     if sys.argv[1] == "recalculate":
         players = db.getPlayerList()
         games = db.getGames()
@@ -131,8 +144,3 @@ if __name__ == "__main__":
             tnow += random.randint(1, 3600)
 
  
-
-
-
-    
-
