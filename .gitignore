@@ -1,0 +1,4 @@
+*.pyc
+*.dat
+*.db
+cgi-bin

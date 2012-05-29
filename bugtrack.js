@@ -35,6 +35,32 @@ function debug(msg) {
  *****************************************************************************/
 
 
+$(document).ready(function() {
+    var $body = $('body'); //Cache this for performance
+    
+    var setBodyScale = function() {
+        var scaleFactor = 0.15,
+        scaleSource = $body.width(),
+        maxScale = 600,
+        minScale = 30;
+        
+        var fontSize = scaleSource * scaleFactor; //Multiply the width of the body by the scaling factor:
+        
+        if (fontSize > maxScale) fontSize = maxScale;
+        if (fontSize < minScale) fontSize = minScale; //Enforce the minimum and maximums
+        
+        $body.css('font-size', fontSize + '%');
+    }
+    
+    $(window).resize(function(){
+        setBodyScale();
+    });
+    
+    //Fire it when the page first loads:
+    setBodyScale();
+});
+
+
 function selChange_cb(elem) {
     var elem_a1 = document.getElementsByName("a1")[0];
     var elem_a2 = document.getElementsByName("a2")[0];

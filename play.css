@@ -1,53 +1,95 @@
 body {
-    margin: 8px;
+    margin: 0;
     height: 100%;
-
-    /* font-family: verdana, arial, serif; */
-    font-size: xx-large;
     font-family: 'Arial', 'Helvetica', sans-serif;
     background-color: #F5F4EB;
-}
-
-input {
-    display: inline;
-}
-
-th {
-    font-size: large;
     text-align: left;
 }
 
-select {
-    font-size: xx-large;
-}
-
-input {
-    font-size: xx-large;
-}
-
-span {
-    font-size: xx-large;
+* {
+    font-size: 102%;
 }
 
 table {
-    font-size: xx-large;
+    width: 100%;
+    border: 0px;
+    border-collapse: collapse;
+}
+
+tr.playerRow td {
+    padding: 0.5em;
+}
+
+
+th {
+    padding-top: 0.5em;
+}
+/*
+tr:last-child td {
+    padding-bottom: 1em;
+}
+*/
+
+colgroup.teamA {
+    background-color: #FF9797;
+}
+
+colgroup.teamB {
+    background-color: #A9C5EB;
+}
+
+tr.buttonRow td, tr.playerRow td.transition {
+    text-align: center;
+    vertical-align: middle;
+    padding: 0;
+}
+
+colgroup.transition {
+    width: 2%;
+
+    /* Cross-browser gradients created at: http://gradients.glrzad.com/ */
+    background-image: linear-gradient(left , #FF9797 25%, #A9C4EB 75%);
+    background-image: -o-linear-gradient(left , #FF9797 25%, #A9C4EB 75%);
+    background-image: -moz-linear-gradient(left , #FF9797 25%, #A9C4EB 75%);
+    background-image: -webkit-linear-gradient(left , #FF9797 25%, #A9C4EB 75%);
+    background-image: -ms-linear-gradient(left , #FF9797 25%, #A9C4EB 75%);
+
+    background-image: -webkit-gradient(
+        linear,
+        left top,
+        right top,
+        color-stop(0.25, #FF9797),
+        color-stop(0.75, #A9C4EB)
+    );
+}
+
+div.player {
+    font-size: 140%;
+}
+
+.chessWhite {
+    color: black;
+    background-color: white;
+    padding: 0.5em;
+    border-radius: 0.5em; 
+}
+
+.chessBlack {
+    color: white;
+    background-color: black;
+    padding: 0.5em;
+    border-radius: 0.5em; 
+}
+
+div.player select {
+    width: 100%;
+}
+
+span.stats {
+/*    font-size: 100%;*/
 }
 
 span.predict {
-    font-size: x-large;
-}
-
-div.chessWhite {
-    color: black;
-    background-color: white;
-    padding: 8px;
-    border-radius: 8px; 
-
-}
-
-div.chessBlack {
-    color: white;
-    background-color: black;
-    padding: 8px;
-    border-radius: 8px; 
+    float: right;
+    font-size: 80%;
 }
