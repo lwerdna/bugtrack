@@ -158,6 +158,13 @@ function recordGame(elem) {
     xmlhttp.send();
     debug("AJAX: " + xmlhttp.responseText);
 
+    if(elem.name == "TeamAWins") {
+        alert("Win for " + elem_a1.value + " and " + elem_a2.value + " recorded!");
+    }
+    else if(elem.name == "TeamBWins") {
+        alert("Win for " + elem_b1.value + " and " + elem_b2.value + " recorded!");
+    }
+
     /* refresh selections */
     selChange_cb(elem_a1);
     selChange_cb(elem_a2);
