@@ -7,10 +7,12 @@ import random
 
 import glicko
 import DbText
+import DbSqlite
 
 if __name__ == "__main__":
         
-    db = DbText.DbText()
+    #db = DbText.DbText()
+    db = DbSqlite.DbSqlite()
 
     if len(sys.argv) <= 1:
         print "send arguments!"
