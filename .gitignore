@@ -2,4 +2,3 @@
 *.dat
 *.db
 cgi-bin
-server.py
