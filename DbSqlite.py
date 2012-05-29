@@ -238,7 +238,7 @@ class DbSqlite(Db.Db):
     def __init__(self):
         # Read configuration file
         self.config = SafeConfigParser()
-        self.config.read('config.ini')
+        self.config.read('DbSqlite.ini')
         dbFile = self.config.get('Database','filename')
 
         # Determine if the database already exists

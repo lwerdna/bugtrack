@@ -34,7 +34,7 @@ print ''
 # show version info
 if config.SHOW_GIT_COMMIT:
     print '<pre>'
-    pipe = subprocess.Popen("git show", stdout=subprocess.PIPE, shell=True)
+    pipe = subprocess.Popen("git log --name-status HEAD^..HEAD", stdout=subprocess.PIPE, shell=True)
     print pipe.communicate()[0]
     print '</pre>'
 
