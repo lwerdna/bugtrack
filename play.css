@@ -8,6 +8,10 @@ body {
     background-color: #F5F4EB;
 }
 
+input {
+    display: inline;
+}
+
 th {
     font-size: large;
     text-align: left;

@@ -184,3 +184,55 @@ function recordGame(elem) {
     selChange_cb(elem_b2);
 }
 
+function swapTeamA(elem)
+{
+    var elem_a1 = document.getElementsByName("a1")[0];
+    var elem_a2 = document.getElementsByName("a2")[0];
+
+    var temp = elem_a1.value;
+    elem_a1.value = elem_a2.value;
+    elem_a2.value = temp;
+
+    selChange_cb(elem_a1);
+    selChange_cb(elem_a2);
+
+}
+
+function clearTeamA(elem)
+{
+    var elem_a1 = document.getElementsByName("a1")[0];
+    var elem_a2 = document.getElementsByName("a2")[0];
+
+    elem_a1.value = ""
+    elem_a2.value = ""
+
+    selChange_cb(elem_a1);
+    selChange_cb(elem_a2);
+}
+
+function swapTeamB(elem)
+{
+    var elem_b1 = document.getElementsByName("b1")[0];
+    var elem_b2 = document.getElementsByName("b2")[0];
+
+    var temp = elem_b1.value;
+    elem_b1.value = elem_b2.value;
+    elem_b2.value = temp;
+
+    selChange_cb(elem_b1);
+    selChange_cb(elem_b2);
+
+}
+
+function clearTeamB(elem)
+{
+    var elem_b1 = document.getElementsByName("b1")[0];
+    var elem_b2 = document.getElementsByName("b2")[0];
+
+    elem_b1.value = ""
+    elem_b2.value = ""
+
+    selChange_cb(elem_b1);
+    selChange_cb(elem_b2);
+}
+
