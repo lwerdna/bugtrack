@@ -63,6 +63,10 @@ colgroup.transition {
     );
 }
 
+div.player {
+    font-size: 140%;
+}
+
 .chessWhite {
     color: black;
     background-color: white;
@@ -78,16 +82,14 @@ colgroup.transition {
 }
 
 div.player select {
-    display: block;
-    margin: 0;
     width: 100%;
-    font-size: 140%;
 }
 
 span.stats {
-    font-size: 100%;
+/*    font-size: 100%;*/
 }
 
 span.predict {
+    float: right;
     font-size: 80%;
 }

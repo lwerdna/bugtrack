@@ -107,7 +107,7 @@ if op == 'play':
     print """
 <html>
 <head>
-  <title></title>
+  <title>Bugtrack</title>
   <link rel=StyleSheet href="/stylesheet.css" type="text/css" />
   <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js" type="text/javascript" charset="utf-8"></script>
   <script type="text/javascript" src="/bugtrack.js"></script>
@@ -128,11 +128,11 @@ if op == 'play':
       <tr class="playerRow">
         <td>
           <div class="player chessWhite">
-            <select name="a1">
+            <select name="a1" onchange="selChange_cb(this)">
     """
     printPlayerSelectOptions(playerList, defaultTeamAPlayer1)
     print """
-            </select><br />
+            </select><br />&#8203;
             <span class="stats" id="a1_stats"></span>
             <span class="predict" id="a1_predict"></span>
           </div>
@@ -141,11 +141,11 @@ if op == 'play':
         </td>
         <td>
           <div class="player chessBlack">
-            <select name="b1">
+            <select name="b1" onchange="selChange_cb(this)">
     """
     printPlayerSelectOptions(playerList, defaultTeamBPlayer1)
     print """
-            </select><br />
+            </select><br />&#8203;
             <span class="stats" id="b1_stats"></span>
             <span class="predict" id="b1_predict"></span>
           </div>
@@ -166,11 +166,11 @@ if op == 'play':
       <tr class="playerRow">
         <td>
           <div class="player chessBlack">
-            <select name="a2">
+            <select name="a2" onchange="selChange_cb(this)">
     """
     printPlayerSelectOptions(playerList, defaultTeamAPlayer2)
     print """
-            </select><br />
+            </select><br />&#8203;
             <span class="stats" id="a2_stats"></span>
             <span class="predict" id="a2_predict"></span>
           </div>
@@ -178,11 +178,11 @@ if op == 'play':
         <td class="transition"><button name="SwapA2B2" type="button" onclick="swapPlayers(this)">&#x21c4;</button></td>
         <td>
           <div class="player chessWhite">
-            <select name="b2">
+            <select name="b2" onchange="selChange_cb(this)">
     """
     printPlayerSelectOptions(playerList, defaultTeamBPlayer2)
     print """
-            </select><br />
+            </select><br />&#8203;
             <span class="stats" id="b2_stats"></span>
             <span class="predict" id="b2_predict"></span>
           </div>
