@@ -4,6 +4,7 @@ import cgi
 import time
 
 import glicko
+import config
 import DbSqlite
 
 def long_ago_str(epoch):
@@ -109,7 +110,7 @@ if op == "gameslist":
         #print ' </td>'
 
         print '<td>'
-        print date_div(g['t'])
+        print date_div(g['t'] + config.TIME_ADJUST)
         print '</td>'
 
         print ' <td>'
