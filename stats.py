@@ -36,9 +36,8 @@ def date_div(epoch):
     day = tms.tm_mday
     year = tms.tm_year
     hour = tms.tm_hour
-    if(hour > 12) {
+    if(hour > 12):
         hour -= 12;
-    }
     minute = tms.tm_min
 
     ampm = 'AM'
