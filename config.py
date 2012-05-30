@@ -8,4 +8,4 @@ SHOW_GIT_COMMIT = 1
 
 # by convention, let's let the DB contain time that makes sense for the server
 # and only when it ready to DISPLAY the time, do we adjust
-TIME_ADJUST = 3*24*3600
+TIME_ADJUST = 3*3600
