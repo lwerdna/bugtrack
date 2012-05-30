@@ -35,7 +35,10 @@ def date_div(epoch):
     mon = mon_lookup[tms.tm_mon - 1]
     day = tms.tm_mday
     year = tms.tm_year
-    hour = tms.tm_hour % 12
+    hour = tms.tm_hour
+    if(hour > 12) {
+        hour -= 12;
+    }
     minute = tms.tm_min
 
     ampm = 'AM'
