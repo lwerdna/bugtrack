@@ -87,8 +87,8 @@ if op == "leaderboard":
 
     print '<ol>'
     for p in players:
-        if(playerToRD[p] > 225):
-            continue
+        #if(playerToRD[p] > 225):
+        #    continue
 
         print '<li style="font-size: x-large">%s (%d.%d) (last played: %s ago)</li>' % (p, playerToRating[p], playerToRD[p], long_ago_str(playerToT[p]))
     print '</ol>'
@@ -120,8 +120,8 @@ if op == "gameslist":
         print '  <div class=chessblack>%s (%d.%d)</div>' % (g['a2'], g['a2_r'], g['a2_rd'])
         print ' </td>'
         print ' <td>'
-        print '  <div class=chessblack>%s (%d.%d)</div>' % (g['b1'], g['b1_r'], g['a1_rd'])
-        print '  <div class=chesswhite>%s (%d.%d)</div>' % (g['b2'], g['b2_r'], g['a1_rd'])
+        print '  <div class=chessblack>%s (%d.%d)</div>' % (g['b1'], g['b1_r'], g['b1_rd'])
+        print '  <div class=chesswhite>%s (%d.%d)</div>' % (g['b2'], g['b2_r'], g['b2_rd'])
         print ' </td>'
       
         # print adjustments?
