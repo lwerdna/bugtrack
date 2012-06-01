@@ -211,8 +211,23 @@ class DbSqlite(Db.Db):
         return games
 
     # retrieve all games that had player involved in it
-    def getGamesByPlayer(self, name, since):
-        print 'getGamesByPlayer() not implemented!'
+    def getGamesByPlayer(self, name, since=0):
+        self.c.execute('SELECT * from ' + self.config.get('Database','table_games') + \
+                       ' WHERE ' + \
+                       '(teamAwhite =  \"' + name + '\") OR '\
+                       '(teamAblack =  \"' + name + '\") OR '\
+                       '(teamBwhite =  \"' + name + '\") OR '\
+                       '(teamBblack =  \"' + name + '\") '\
+                       'ORDER by time;')
+
+        games = []
+        for x in self.c.fetchall():
+            games.append({'t':x[0], \
+                          'a1':str(x[1]), 'a1_r':x[2], 'a1_rd':x[3], \
+                          'a2':str(x[4]), 'a2_r':x[5], 'a2_rd':x[6], \
+                          'b1':str(x[7]), 'b1_r':x[8], 'b1_rd':x[9], \
+                          'b2':str(x[10]),'b2_r':x[11],'b2_rd':x[12]})
+        return games
 
     def recordGame(self, data):
         cmd = 'INSERT INTO ' + self.config.get('Database','table_games') + '('
