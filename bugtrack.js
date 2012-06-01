@@ -31,26 +31,76 @@ function debug(msg) {
 }
 
 /******************************************************************************
- * DOM junk
+ * AJAX
  *****************************************************************************/
+function ajax(url) {
+    var xmlhttp = new XMLHttpRequest();
+    debug("AJAX: " + url)
+    xmlhttp.open("GET", url, false);
+    xmlhttp.send()
+    var resp = xmlhttp.responseText;
+    debug("AJAX: " + resp)
+    return resp
+}
 
+/******************************************************************************
+ * global vars
+ *****************************************************************************/
+var elem_a1, elem_a2, elem_b1, elem_b2;
+var elem_a1stats, elem_a2stats, elem_b1stats, elem_b2stats;
+var elem_a1predict, elem_a2predict, elem_b1predict, elem_b2predict;
+
+var playerNames = [];
+var playerToR = [];
+var playerToRD = [];
+var playerToT = [];
+
+/* called when the play page loads */
+function playInit(x) {
+    /* init global vars */
+    elem_a1 = document.getElementById("a1");
+    elem_a2 = document.getElementById("a2");
+    elem_b1 = document.getElementById("b1");
+    elem_b2 = document.getElementById("b2");
+
+    elem_a1stats = document.getElementById("a1_stats");
+    elem_a2stats = document.getElementById("a2_stats");
+    elem_b1stats = document.getElementById("b1_stats");
+    elem_b2stats = document.getElementById("b2_stats");
+
+    elem_a1predict = document.getElementById("a1_predict");
+    elem_a2predict = document.getElementById("a2_predict");
+    elem_b1predict = document.getElementById("b1_predict");
+    elem_b2predict = document.getElementById("b2_predict");
+
+    /* populate the player drop-down */
+    var resp = ajax("dbaccess.py?op=getplayers")
+    var lines = resp.split("\n")
+    for(var j in lines) {
+        var m = lines[j].match(/^(.*),(.*),(.*),(.*)$/);
+
+        if(m) {
+            playerName = m[1];
+            playerNames.push(playerName);
+            playerToR[playerName] = parseInt(m[2])
+            playerToRD[playerName] = parseInt(m[3])
+            playerToT[playerName] = parseInt(m[4])
+        }
+    }
+
+    playerNames.sort();
+    var elems = [elem_a1, elem_a2, elem_b1, elem_b2];
+    for(var i in elems) {
+        elems[i].value = '';
+        elems[i].innerHTML = '<option></option>';
+
+        for(var j in playerNames) {
+            elems[i].innerHTML += "<option>" + playerNames[j] + "</option>";
+        }
+    }
+}
 
 function selChange_cb(elem) {
-    var elem_a1 = document.getElementsByName("a1")[0];
-    var elem_a2 = document.getElementsByName("a2")[0];
-    var elem_b1 = document.getElementsByName("b1")[0];
-    var elem_b2 = document.getElementsByName("b2")[0];
-
-    var elem_a1stats = document.getElementById("a1_stats");
-    var elem_a2stats = document.getElementById("a2_stats");
-    var elem_b1stats = document.getElementById("b1_stats");
-    var elem_b2stats = document.getElementById("b2_stats");
-
-    var elem_a1predict = document.getElementById("a1_predict");
-    var elem_a2predict = document.getElementById("a2_predict");
-    var elem_b1predict = document.getElementById("b1_predict");
-    var elem_b2predict = document.getElementById("b2_predict");
-
     /* force other drop downs away from the name we just selected */
     var elems = [elem_a1, elem_a2, elem_b1, elem_b2];
     var elems_stats = [elem_a1stats, elem_a2stats, elem_b1stats, elem_b2stats];
@@ -68,32 +118,12 @@ function selChange_cb(elem) {
         }
     }
 
-    /* update statistics of the player selected */
-    if(elem.value != "") {
-        var xmlhttp = new XMLHttpRequest();
-        var reqText = "play.py?op=getstats&player=" + elem.value;
-        debug("AJAX: " + reqText)
-        xmlhttp.open("GET", reqText, false);
-        xmlhttp.send()
-        var resp = xmlhttp.responseText;
-        debug("AJAX: " + resp)
-        stats = resp.split(",")
-    }
-    else {
-        stats = 0
-    }
-
-    var enameToElemStats = new Array()
+    var enameToElemStats = []
     enameToElemStats["a1"] = elem_a1stats;
     enameToElemStats["a2"] = elem_a2stats;
     enameToElemStats["b1"] = elem_b1stats;
     enameToElemStats["b2"] = elem_b2stats;
-    if(stats) {
-        enameToElemStats[elem.name].innerHTML = stats[0] + "." + stats[1]
-    }
-    else {
-        enameToElemStats[elem.name] = ""
-    }
+    enameToElemStats[elem.id].innerHTML = playerToR[elem.value] + "." + playerToRD[elem.value]
 
     /**************************************************************************
         update predictions
@@ -137,11 +167,6 @@ function selChange_cb(elem) {
 }
 
 function recordGame(elem) {
-    var elem_a1 = document.getElementsByName("a1")[0];
-    var elem_a2 = document.getElementsByName("a2")[0];
-    var elem_b1 = document.getElementsByName("b1")[0];
-    var elem_b2 = document.getElementsByName("b2")[0];
-
     var xmlhttp = new XMLHttpRequest();
     var req = "?op=record&a1=" + elem_a1.value + "&a2=" + elem_a2.value +
               "&b1=" + elem_b1.value + "&b2=" + elem_b2.value;

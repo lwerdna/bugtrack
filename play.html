@@ -1,0 +1,74 @@
+<html>
+ <head>
+   <title>
+    Test page for Bugtrack JS
+   </title>
+   <link rel=StyleSheet href="play.css" type="text/css">
+   <script type="text/javascript" src="./bugtrack.js"></script>
+ </head>
+
+
+<body onload="playInit()">
+<body style="margin:0px">
+ <input type=hidden name="op" value="record">
+ <table width="100%" cellpadding=12 cellspacing=0>
+  <tr>
+   <th width="50%" bgcolor="#FF9797">Team A</th>
+   <th width="50%" bgcolor="#A9C5EB">Team B</th>
+  </tr>
+  <tr>
+   <td width="50%" bgcolor="#FF9797">
+    <div class=chessWhite>
+     <select id=a1 onchange='selChange_cb(this)'>
+     <!-- populated by js -->
+     </select>
+     <span id=a1_stats></span>
+     <span class="predict" id=a1_predict></span>
+    </div>
+   </td>
+   <td bgcolor="#A9C5EB">
+    <div class=chessBlack>
+     <select id=b1 onchange='selChange_cb(this)'>
+     <!-- populated by js -->
+     </select>
+     <span id=b1_stats></span>
+     <span class="predict" id=b1_predict></span>
+    </div>
+   </td>
+  </tr>
+  <!-- team B -->
+  <tr>
+   <td bgcolor="#FF9797">
+    <div class=chessBlack>
+     <select id=a2 onchange='selChange_cb(this)'>
+     <!-- populated by js -->
+     </select>
+     <span id=a2_stats></span>
+     <span class="predict" id=a2_predict></span>
+    </div>
+   </td>
+   <td bgcolor="#A9C5EB">
+    <div class=chessWhite>
+     <select id=b2 onchange='selChange_cb(this)'>
+     <!-- populated by js -->
+     </select>
+     <span id=b2_stats></span>
+     <span class="predict" id=b2_predict></span>
+    </div>
+   </td>
+  </tr>
+  <tr>
+   <td bgcolor="#FF9797">
+    <input name="TeamAWins" type=submit value="WIN" onClick="recordGame(this)">
+    <input name="" type=submit value="swap &#x21c5;" onClick="swapTeamA(this)">
+    <input name="" type=submit value="clear &#x21bb" onClick="clearTeamA(this)">
+   </td>
+   <td bgcolor="#A9C5EB">
+    <input name="TeamBWins" type=submit value="WIN" onClick="recordGame(this)">
+    <input name="" type=submit value="swap &#x21c5 " onClick="swapTeamB(this)">
+    <input name="" type=submit value="clear &#x21bb" onClick="clearTeamB(this)">
+   </td>
+  </tr>
+ </table>
+</body>
+</html>
