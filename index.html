@@ -1,15 +1,25 @@
 <html>
  <head>
    <title>
-    Test page for Bugtrack JS
+    BugTrack - Bughouse Tracking Software
    </title>
-   <link rel=StyleSheet href="play.css" type="text/css">
+   <link rel=StyleSheet href="stylesheet.css" type="text/css">
    <script type="text/javascript" src="./bugtrack.js"></script>
  </head>
 
 
 <body onload="playInit()">
 <body style="margin:0px">
+
+<div class="menu">
+ BugTrack: 
+ <input type=submit class="menu" onclick="showPlay()" value="Play" />
+ <input type=submit class="menu" onclick="showStats()" value="Stats" />
+ <input type=submit class="menu" onclick="showGamesList()" value="Games" />
+</div>
+
+<!-- visible by default -->
+<div id="play">
  <input type=hidden name="op" value="record">
  <table width="100%" cellpadding=12 cellspacing=0>
   <tr>
@@ -70,5 +80,15 @@
    </td>
   </tr>
  </table>
+</div>
+
+<div id="stats" style="display: none">
+ <h3>Stats Page!</h3>
+</div>
+
+<div id="games" style="display: none">
+ <h3>Games Page!</h3>
+</div>
+
 </body>
 </html>

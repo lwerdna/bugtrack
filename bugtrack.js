@@ -50,6 +50,8 @@ var elem_a1, elem_a2, elem_b1, elem_b2;
 var elem_a1stats, elem_a2stats, elem_b1stats, elem_b2stats;
 var elem_a1predict, elem_a2predict, elem_b1predict, elem_b2predict;
 
+var elemDivPlay, elemDivStats, elemDivGames;
+
 var playerElems = [];
 var playerNames = [];
 var playerToR = [];
@@ -81,6 +83,10 @@ function playInit(x) {
     elem_a2predict = document.getElementById("a2_predict");
     elem_b1predict = document.getElementById("b1_predict");
     elem_b2predict = document.getElementById("b2_predict");
+
+    elemDivPlay = document.getElementById("play");
+    elemDivStats = document.getElementById("stats");
+    elemDivGames = document.getElementById("games");
 
     /* init global player vars */
     var resp = ajax("dbaccess.py?op=getplayers")
@@ -116,6 +122,30 @@ function playInit(x) {
     playShowPredictions();
 }
 
+/******************************************************************************
+ * show/hide divs
+ *****************************************************************************/
+function showPlay() {
+    elemDivPlay.style.display = 'block';
+    elemDivStats.style.display = 'none';
+    elemDivGames.style.display = 'none';
+}
+
+function showStats() {
+    elemDivPlay.style.display = 'none';
+    elemDivStats.style.display = 'block';
+    elemDivGames.style.display = 'none';
+}
+
+function showGamesList() {
+    elemDivPlay.style.display = 'none';
+    elemDivStats.style.display = 'none';
+    elemDivGames.style.display = 'block';
+}
+
+/******************************************************************************
+ * 
+ *****************************************************************************/
 function playShowRatings() {
     /* update statistics (rating.rd) */
     var enameToElemStats = []
@@ -225,7 +255,7 @@ function selChange_cb(elem) {
 
 }
 
-function recordGame(elem) {
+function recordGame() {
     var xmlhttp = new XMLHttpRequest();
     var req = "?op=record&a1=" + elem_a1.value + "&a2=" + elem_a2.value +
               "&b1=" + elem_b1.value + "&b2=" + elem_b2.value;

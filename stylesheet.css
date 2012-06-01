@@ -8,6 +8,10 @@ body {
     background-color: #F5F4EB;
 }
 
+input {
+    display: inline;
+}
+
 th {
     font-size: large;
     text-align: left;
@@ -46,4 +50,19 @@ div.chessBlack {
     background-color: black;
     padding: 8px;
     border-radius: 8px; 
+}
+
+div.menu {
+    background-color: grey;
+    font-size: small;
+    margin: 0px;
+    padding: 2px;
+    padding-left: 8px;
+    border: 0px;
+}
+
+input.menu {
+    font-size: small;
+    border: 1px solid black;
+    margin: 0px;
 }
