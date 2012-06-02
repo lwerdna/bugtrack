@@ -3,7 +3,7 @@ body {
     height: 100%;
 
     /* font-family: verdana, arial, serif; */
-    font-size: xx-large;
+    font-size: x-large;
     font-family: 'Arial', 'Helvetica', sans-serif;
     background-color: #F5F4EB;
 }
@@ -18,23 +18,24 @@ th {
 }
 
 select {
-    font-size: xx-large;
+    font-size: x-large;
 }
 
 input {
-    font-size: xx-large;
+    font-size: x-large;
 }
 
 span {
-    font-size: xx-large;
+    font-size: x-large;
 }
 
 table {
-    font-size: xx-large;
+    font-size: x-large;
 }
 
 span.predict {
-    font-size: x-large;
+    font-size: large;
+    font-weight: bold;
 }
 
 div.chessWhite {

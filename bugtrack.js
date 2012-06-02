@@ -252,26 +252,66 @@ function selChange_cb(elem) {
 
     /* possibly (if 4 players) show game predictions */
     playShowPredictions();
-
 }
 
-function recordGame() {
+function recordGame(elem) {
     var xmlhttp = new XMLHttpRequest();
     var req = "?op=record&a1=" + elem_a1.value + "&a2=" + elem_a2.value +
               "&b1=" + elem_b1.value + "&b2=" + elem_b2.value;
 
+    var a1a2b1b2 = []
+    var ratings = []
+    var rds = []
+    var ts = []
+    var rps = []
+
+    for(var i in playerElems) {
+        a1a2b1b2.push(playerElems[i].value)
+        ratings.push(playerToR[playerElems[i].value]);
+        rds.push(playerToRD[playerElems[i].value]);
+        ts.push(playerToT[playerElems[i].value]);
+    }
+
     if(elem.name == "TeamAWins") {
-        req += "&TeamAWins=1"
+        /* then arrays are in correct order */
     }
-    else if(elem.name == "TeamBWins") {
-        req += "&TeamBWins=1"
+    else {
+        /* position winner in locations [0], [1] */
+        a1a2b1b2 = [a1a2b1b2[2], a1a2b1b2[3], a1a2b1b2[0], a1a2b1b2[1]]
+        ratings = [ratings[2], ratings[3], ratings[0], ratings[1]]
+        rd = [rd[2], rd[3], rd[0], rd[1]]
+        ts = [ts[2], ts[3], ts[0], ts[1]]
+    }
+    
+    /* convert those last-time-played timestamps to rating periods */
+    var tNow = Math.round((new Date()).getTime() / 1000);
+
+    for(var i in ts) {
+        rps.push(secToRatingPeriods(tNow - ts[i]));
     }
 
-    debug("AJAX: " + req);
-    xmlhttp.open("GET", req, false);
-    xmlhttp.send();
-    debug("AJAX: " + xmlhttp.responseText);
+    /* build the ajax request */
+    var req = 'dbaccess.py?op=recordGame'
 
+    /* game stats: players, OLD r's, OLD rd's */
+    req += '&t=' + tNow;
+    req += '&a1=' + a1a2b1b2[0] + "&a1_r=" + playerToR[a1a2b1b2[0]] + "&a1_rd=" + playerToRD[a1a2b1b2[0]];
+    req += '&a2=' + a1a2b1b2[1] + "&a2_r=" + playerToR[a1a2b1b2[1]] + "&a2_rd=" + playerToRD[a1a2b1b2[1]];
+    req += '&b1=' + a1a2b1b2[2] + "&b1_r=" + playerToR[a1a2b1b2[2]] + "&b1_rd=" + playerToRD[a1a2b1b2[2]];
+    req += '&b2=' + a1a2b1b2[3] + "&b2_r=" + playerToR[a1a2b1b2[3]] + "&b2_rd=" + playerToRD[a1a2b1b2[3]];
+    
+    /* new scores, ratings */
+    var results = calcGameScores(ratings, rds, rps);
+
+    req += "&a1_r_new=" + results[0][0] + "&a1_rd_new=" + results[0][1];
+    req += "&a2_r_new=" + results[1][0] + "&a2_rd_new=" + results[1][1];
+    req += "&b1_r_new=" + results[2][0] + "&b1_rd_new=" + results[2][1];
+    req += "&b2_r_new=" + results[3][0] + "&b2_rd_new=" + results[3][1];
+
+    /* do it! */
+    ajax(req);
+
+    /* message */
     if(elem.name == "TeamAWins") {
         alert("Win for " + elem_a1.value + " and " + elem_a2.value + " recorded!");
     }
@@ -279,11 +319,16 @@ function recordGame() {
         alert("Win for " + elem_b1.value + " and " + elem_b2.value + " recorded!");
     }
 
-    /* refresh selections */
-    selChange_cb(elem_a1);
-    selChange_cb(elem_a2);
-    selChange_cb(elem_b1);
-    selChange_cb(elem_b2);
+    /* now also update the global vars */
+    for(var i in a1a2b1b2) {
+        playerToR[a1a2b1b2[i]] = results[i][0];
+        playerToRD[a1a2b1b2[i]] = results[i][1];
+        playerToT[a1a2b1b2[i]] = tNow;
+    } 
+
+    /* refresh */
+    playShowRatings();
+    playShowPredictions();
 }
 
 function swapElemVals(a, b)
@@ -448,6 +493,7 @@ function calcGameScores(ratings, rds, tds) {
     // calculate for a2 (first winner, black)
     ratings = [ratings[1], ratings[0], ratings[2], ratings[3]]
     rds = [rds[1], rds[0], rds[2], rds[3]]
+    debug("calcRatingRdPlayer(" + ratings + ", " + rds + ", " + tds[1] + ", 1);");
     stats2 = calcRatingRdPlayer(ratings, rds, tds[1], 1)
     debug("a2 new stats: " + stats2 + '<br>\n');
 
@@ -457,6 +503,7 @@ function calcGameScores(ratings, rds, tds) {
     stats3 = calcRatingRdPlayer(ratings, rds, tds[2], 0)
     debug("b1 new stats: " + stats3 + '<br>\n');
 
+    // calculate for b2 (first loser, white)
     ratings = [ratings[1], ratings[0], ratings[2], ratings[3]]
     rds = [rds[1], rds[0], rds[2], rds[3]]
     stats4 = calcRatingRdPlayer(ratings, rds, tds[3], 0)

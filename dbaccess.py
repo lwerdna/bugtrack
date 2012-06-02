@@ -32,13 +32,14 @@ if op == 'recordGame':
     db.recordGame({'a1':form['a1'].value, 'a1_r':int(form['a1_r'].value), 'a1_rd':int(form['a1_rd'].value),
                    'a2':form['a2'].value, 'a2_r':int(form['a2_r'].value), 'a2_rd':int(form['a2_rd'].value),
                    'b1':form['b1'].value, 'b1_r':int(form['b1_r'].value), 'b1_rd':int(form['b1_rd'].value),
-                   'b2':form['a1'].value, 'a1_r':int(form['a1_r'].value), 'a1_rd':int(form['a1_rd'].value)
+                   'b2':form['b2'].value, 'b2_r':int(form['b2_r'].value), 'b2_rd':int(form['a2_rd'].value),
+                   't':form['t'].value
                 });
 
-    db.setPlayerStats([form['a1'].value, int(form['a1_r_new'].value), int(form['a1_rd_new'].value), int(form['a1_t_new'])])
-    db.setPlayerStats([form['a2'].value, int(form['a2_r_new'].value), int(form['a2_rd_new'].value), int(form['a2_t_new'])])
-    db.setPlayerStats([form['b1'].value, int(form['b1_r_new'].value), int(form['b1_rd_new'].value), int(form['b1_t_new'])])
-    db.setPlayerStats([form['b2'].value, int(form['b2_r_new'].value), int(form['b2_rd_new'].value), int(form['b2_t_new'])])
+    db.setPlayerStats(form['a1'].value, [int(form['a1_r_new'].value), int(form['a1_rd_new'].value), int(form['t'].value)])
+    db.setPlayerStats(form['a2'].value, [int(form['a2_r_new'].value), int(form['a2_rd_new'].value), int(form['t'].value)])
+    db.setPlayerStats(form['b1'].value, [int(form['b1_r_new'].value), int(form['b1_rd_new'].value), int(form['t'].value)])
+    db.setPlayerStats(form['b2'].value, [int(form['b2_r_new'].value), int(form['b2_rd_new'].value), int(form['t'].value)])
 
     print "OK",
 
