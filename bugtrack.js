@@ -107,8 +107,8 @@ function playInit(x) {
     playerNames.sort();
     var elems = [elem_a1, elem_a2, elem_b1, elem_b2];
     for(var i in elems) {
-        //elems[i].value = '';
-        //elems[i].innerHTML = '<option></option>';
+        elems[i].value = '';
+        elems[i].innerHTML = '<option></option>';
 
         for(var j in playerNames) {
             elems[i].innerHTML += "<option>" + playerNames[j] + "</option>";
@@ -354,12 +354,12 @@ function swapTeamA(elem)
 
 function clearTeamA(elem)
 {
-    var elems = [elem_a1, elem_a1stats, elem_a1predict,
-                    elem_a2, elem_a2stats, elem_a2predict];
-
-    for(var i in elems) {
-        elems[i].value = ""
-    }
+    elem_a1.value = ''
+    elem_a1stats.innerHTML = ''
+    elem_a1predict.innerHTML = ''
+    elem_a2.value = ''
+    elem_a2stats.innerHTML = ''
+    elem_a2predict.innerHTML = ''
 }
 
 function swapTeamB(elem)
@@ -371,12 +371,12 @@ function swapTeamB(elem)
 
 function clearTeamB(elem)
 {
-    var elems = [elem_b1, elem_b1stats, elem_b1predict,
-                    elem_b2, elem_b2stats, elem_b2predict];
-
-    for(var i in elems) {
-        elems[i].value = ""
-    }
+    elem_b1.value = ''
+    elem_b1stats.innerHTML = ''
+    elem_b1predict.innerHTML = ''
+    elem_b2.value = ''
+    elem_b2stats.innerHTML = ''
+    elem_b2predict.innerHTML = ''
 }
 
 

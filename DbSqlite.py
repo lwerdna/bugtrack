@@ -6,10 +6,9 @@
 import sqlite3
 import string
 from ConfigParser import SafeConfigParser
-import Db
 import os
 
-class DbSqlite(Db.Db):
+class DbSqlite():
 
     #--------------------------------------------------------------------------
     # database maintenance
