@@ -213,11 +213,12 @@ class DbSqlite(Db.Db):
     # retrieve all games that had player involved in it
     def getGamesByPlayer(self, name, since=0):
         self.c.execute('SELECT * from ' + self.config.get('Database','table_games') + \
-                       ' WHERE ' + \
+                       ' WHERE ((' + \
                        '(teamAwhite =  \"' + name + '\") OR '\
                        '(teamAblack =  \"' + name + '\") OR '\
                        '(teamBwhite =  \"' + name + '\") OR '\
-                       '(teamBblack =  \"' + name + '\") '\
+                       '(teamBblack =  \"' + name + '\")) AND '\
+                       '(time > ' + str(since) + ')) ' \
                        'ORDER by time;')
 
         games = []
