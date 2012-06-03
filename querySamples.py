@@ -15,6 +15,7 @@ def getPlayerScoreHistory(name, since=0):
             if (g[x] == name):
                 history.append([g['t'],g[x+'_r']])
                 break
+    history.append([db.getPlayerT(name),db.getPlayerRating(name)])
     return history
 
 def genMatchupData(players, history_len=3600):
