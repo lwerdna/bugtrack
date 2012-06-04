@@ -198,7 +198,7 @@ class DbSqlite():
     # (change this comment if the db schema changes please)
     def getGames(self, since=0):
         self.c.execute('SELECT * from ' + self.config.get('Database','table_games') + \
-                       ' WHERE (time > ' + str(since) + ') order by time desc;')
+                       ' WHERE (time > ' + str(since) + ') order by time;')
 
         games = []
         for x in self.c.fetchall():

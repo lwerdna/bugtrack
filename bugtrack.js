@@ -896,6 +896,8 @@ function loadGamesList() {
     html += '  <th bgcolor=red>losers</th>\n'
     html += '</tr>\n'
 
+    lines.reverse();
+
     for(var i in lines) {
         if(!lines[i]) {
             continue;
