@@ -27,6 +27,11 @@ class DbSqlite():
             ['teamBblack',      'TEXT'],     # Loser  - Black player
             ['teamBblackRating','INTEGER'],  # Loser  - Black player rating
             ['teamBblackRD',    'INTEGER']]  # Loser  - Black player RD
+    SCHEMA_ACHIEVEMENTS = [
+            ['id',    'INTEGER PRIMARY KEY'],
+            ['name',  'TEXT'],     # Player Name
+            ['title', 'INTEGER'],  # Achievement title
+            ['time',  'REAL']]     # Timestamp of achievement 
     SCHEMA_PLAYERS = [
             ['name',  'TEXT PRIMARY KEY'],     # Name
             ['rating','INTEGER'],  # Rating
@@ -117,6 +122,16 @@ class DbSqlite():
                 player += tokens[i] + ' '
             player = player[:-1] + '\''
             self.genDBEntry(self.SCHEMA_PLAYERS, self.config.get('Database','table_players'), [player,rating,rd,t])
+
+    def offsetGameTime(self, offset):
+        print 'Applying game time offset of ' + str(offset) + ' to all recorded games...'
+        games = self.getGames()
+        for g in games:
+            newtime = g['t'] + float(offset)
+            cmd = 'UPDATE ' + self.config.get('Database','table_games') + \
+                  ' set time = ' + str(newtime) + ' WHERE (time = ' + str(g['t']) + ');'
+            self.c.execute(cmd)
+        self.conn.commit()
 
     #--------------------------------------------------------------------------
     # general info
