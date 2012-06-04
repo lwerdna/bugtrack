@@ -88,8 +88,13 @@ function playInit(x) {
     elemDivStats = document.getElementById("stats");
     elemDivGames = document.getElementById("games");
 
+    /* display the play part only */
+    elemDivPlay.style.display = 'block';
+    elemDivStats.style.display = 'none';
+    elemDivGames.style.display = 'none';
+
     /* init global player vars */
-    var resp = ajax("dbaccess.py?op=getplayers")
+    var resp = ajax('jsIface.py?op=getplayers')
     var lines = resp.split("\n")
     for(var j in lines) {
         var m = lines[j].match(/^(.*),(.*),(.*),(.*)$/);
@@ -123,6 +128,189 @@ function playInit(x) {
 }
 
 /******************************************************************************
+ * stats functions
+ *****************************************************************************/
+function loadAllRatingsHistoryGraph() {
+    /* prepare the user for delay */
+    document.getElementById("AllRatingsHistoryGraph_status").innerHTML = "loading...";
+
+    /* get to work */
+    var playerList = []
+    var playerToObject = {}
+
+    var resp = ajax("jsIface.py?op=getGames");
+    var lines = resp.split("\n");
+    for(var i in lines) {
+        var data = lines[i].split(",");
+        var t = parseInt(data[0]);
+        var a1 = data[1];
+        var a1_r = parseInt(data[2]);
+        var a2 = data[4];
+        var a2_r = parseInt(data[5]);
+        var b1 = data[7];
+        var b1_r = parseInt(data[8]);
+        var b2 = data[10];
+        var b2_r = parseInt(data[11]);
+
+        if(isNaN(t)) {
+            continue;
+        }
+
+        var players = [a1, a2, b1, b2];
+        var ratings = [a1_r, a2_r, b1_r, b2_r];
+
+        /* update each player's data from the game */
+        for(var i in players) {
+            var p = players[i];
+            var r = ratings[i];
+
+            /* create if not exist yet */
+            if(playerToObject[p] == undefined) {
+                playerList.push(p);
+                playerToObject[p] = { name: p, data: [] };
+            }
+
+            /* append this one rating sample */
+            /* recall that the 'datetime' type of xAxis in highcharts expects milliseconds */
+            playerToObject[p]['data'].push([t*1000, r]);
+        }
+    }
+
+    /* build the series as an array of player objects */
+    var seriesData = [];
+    for(var i in playerList) {
+        seriesData.push(playerToObject[playerList[i]])
+    }
+
+    /* finally, render the graph into this div */
+    var chart = new Highcharts.Chart(
+        {
+            chart: {
+                renderTo: document.getElementById("AllRatingsHistoryGraph"), 
+                zoomType: 'x', 
+                type: 'spline'
+            },
+            title: {
+                text: 'Player Rating vs. Time'
+            },
+            xAxis: {
+                type: 'datetime',
+                dateTimeLabelFormats: { // don't display the dummy year
+                    month: '%e. %b',
+                    year: '%b'
+                }
+            },
+            yAxis: {
+                title: {
+                    text: 'Rating'
+                },
+                min: 0
+            },
+            tooltip: {
+                formatter: function() {
+                    return '<b>'+ this.series.name +'</b><br/>'+Highcharts.dateFormat('%e. %b', this.x) +': '+ this.y;
+                }
+            },
+            series: seriesData
+        }
+    );
+
+    /* erase the "loading..." message */
+    document.getElementById("AllRatingsHistoryGraph_status").innerHTML = "";
+}
+
+function loadAllRatingsVsGamesGraph() {
+    /* prepare the user for delay */
+    document.getElementById("AllRatingsVsGamesGraph_status").innerHTML = "loading...";
+
+    /* get to work */
+    var playerList = []
+    var playerToObject = {}
+
+    var resp = ajax("jsIface.py?op=getGames");
+    var lines = resp.split("\n");
+    for(var i in lines) {
+        var data = lines[i].split(",");
+        var t = parseInt(data[0]);
+        var a1 = data[1];
+        var a1_r = parseInt(data[2]);
+        var a2 = data[4];
+        var a2_r = parseInt(data[5]);
+        var b1 = data[7];
+        var b1_r = parseInt(data[8]);
+        var b2 = data[10];
+        var b2_r = parseInt(data[11]);
+
+        if(isNaN(t)) {
+            continue;
+        }
+
+        var players = [a1, a2, b1, b2];
+        var ratings = [a1_r, a2_r, b1_r, b2_r];
+
+        /* update each player's data from the game */
+        for(var i in players) {
+            var p = players[i];
+            var r = ratings[i];
+
+            /* create if not exist yet */
+            if(playerToObject[p] == undefined) {
+                playerList.push(p);
+                playerToObject[p] = { name: p, data: [], nGames: 0 };
+            }
+
+            /* append this one rating sample */
+            var nGames = playerToObject[p]['nGames'];
+            playerToObject[p]['data'].push([nGames, r]);
+            playerToObject[p]['nGames']++;
+        }
+    }
+
+    /* build the series as an array of player objects */
+    var seriesData = [];
+    for(var i in playerList) {
+        playerToObject[playerList[i]]['nGames'] = undefined;
+        seriesData.push(playerToObject[playerList[i]]);
+    }
+
+    /* finally, render the graph into this div */
+    var chart = new Highcharts.Chart(
+        {
+            chart: {
+                renderTo: document.getElementById("AllRatingsVsGamesGraph"), 
+                zoomType: 'x', 
+                type: 'spline'
+            },
+            title: {
+                text: 'Player Rating vs. Amount Games Played'
+            },
+            xAxis: {
+                title: {
+                    text: 'n\'th game'
+                },
+                min: 0
+            },
+            yAxis: {
+                title: {
+                    text: 'Rating'
+                },
+                min: 0
+            },
+            tooltip: {
+                formatter: function() {
+                    return '<b>'+ this.series.name +'</b><br/>'+Highcharts.dateFormat('%e. %b', this.x) +': '+ this.y;
+                }
+            },
+            series: seriesData
+        }
+    );
+
+    /* erase the "loading..." message */
+    document.getElementById("AllRatingsVsGamesGraph_status").innerHTML = "";
+}
+
+
+/******************************************************************************
  * show/hide divs
  *****************************************************************************/
 function showPlay() {
@@ -135,6 +323,10 @@ function showStats() {
     elemDivPlay.style.display = 'none';
     elemDivStats.style.display = 'block';
     elemDivGames.style.display = 'none';
+
+    // each graph has a function dedicated to loading it...
+    loadAllRatingsVsGamesGraph();
+    loadAllRatingsHistoryGraph();
 }
 
 function showGamesList() {
@@ -291,7 +483,7 @@ function recordGame(elem) {
     }
 
     /* build the ajax request */
-    var req = 'dbaccess.py?op=recordGame'
+    var req = 'jsIface.py?op=recordGame'
 
     /* game stats: players, OLD r's, OLD rd's */
     req += '&t=' + tNow;

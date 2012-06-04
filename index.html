@@ -4,6 +4,8 @@
     BugTrack - Bughouse Tracking Software
    </title>
    <link rel=StyleSheet href="stylesheet.css" type="text/css">
+   <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+   <script src="/HighCharts/js/highcharts.js" type="text/javascript"></script>
    <script type="text/javascript" src="./bugtrack.js"></script>
  </head>
 
@@ -82,11 +84,15 @@
  </table>
 </div>
 
-<div id="stats" style="display: none">
- <h3>Stats Page!</h3>
+<div id="stats" style="margin: 1em">
+ <div id="AllRatingsVsGamesGraph_status"></div>
+ <div id="AllRatingsVsGamesGraph" style="min-width: 400px; height: 400px; margin: 0 auto"></div>
+ <br>
+ <div id="AllRatingsHistoryGraph_status"></div>
+ <div id="AllRatingsHistoryGraph" style="min-width: 400px; height: 400px; margin: 0 auto"></div>
 </div>
 
-<div id="games" style="display: none">
+<div id="games">
  <h3>Games Page!</h3>
 </div>
 

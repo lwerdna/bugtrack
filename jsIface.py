@@ -1,5 +1,14 @@
 #!/usr/bin/python
 
+#
+# this is the interface by which the JavaScript interacts with the "back-end"
+# (database, persistent storage) of the rest of bugtrack
+#
+# the JS makes get/post requests to this CGI, and this prints data (initially
+# in CSV format) which the JS parses and presents to the user (via HTML or
+# high charts, etc.)
+#
+
 import os
 import cgi
 import DbSqlite
@@ -18,11 +27,6 @@ db = DbSqlite.DbSqlite()
 playerList = db.getPlayerList()
 
 form = cgi.FieldStorage()
-
-defaultTeamAPlayer1 = ''
-defaultTeamAPlayer2 = ''
-defaultTeamBPlayer1 = ''
-defaultTeamBPlayer2 = ''
 
 op = 'play'
 if 'op' in form:
@@ -65,8 +69,19 @@ if op == 'getplayers':
 
 if op == 'getstats':
     player = form['player'].value
-    if player in playerList:
+    pl = db.getPlayerList()
+    if player in pl:
         [rating, rd, t] = db.getPlayerStats(player)
         print "%d,%d,%d" % (rating, rd, t)
+
+if op == 'getGames':
+    games = db.getGames()
+    for g in games:
+        print "%d,%s,%d,%d,%s,%d,%d,%s,%d,%d,%s,%d,%d" % (
+                            g['t'], 
+                            g['a1'], g['a1_r'], g['a1_rd'],
+                            g['a2'], g['a2_r'], g['a2_rd'],
+                            g['b1'], g['b1_r'], g['b1_rd'],
+                            g['b2'], g['b2_r'], g['b2_rd'] )
 
 
