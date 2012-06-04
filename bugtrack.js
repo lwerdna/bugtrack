@@ -31,7 +31,7 @@ function debug(msg) {
 }
 
 /******************************************************************************
- * AJAX
+ * UTILS
  *****************************************************************************/
 function ajax(url) {
     var xmlhttp = new XMLHttpRequest();
@@ -41,6 +41,32 @@ function ajax(url) {
     var resp = xmlhttp.responseText;
     debug("AJAX: " + resp)
     return resp
+}
+
+function longAgoStr(epoch) {
+    answer = ''
+    delta = (new Date().getTime() / 1000) - epoch
+
+    if (delta < 60) {
+        answer = delta + ' seconds';
+    }
+    else if (delta < 3600) {
+        answer = (delta / 60).toFixed(1) + ' minutes';
+    }
+    else if (delta < 86400) {
+        answer = (delta / 3600).toFixed(1) + ' hours';
+    }
+    else if (delta < 2592000) {
+        answer = (delta / 86400).toFixed(1) + ' days';
+    }
+    else if (delta < 31536000) {
+        answer = (delta / 2592000).toFixed(1) + ' months';
+    }
+    else {
+        answer = (delta / 31536000.0).toFixed(1) + ' years';
+    }
+
+    return answer
 }
 
 /******************************************************************************
@@ -832,10 +858,59 @@ function loadResultsVsOpponentsGraph(who) {
 }
 
 /******************************************************************************
- * PLAY MODE stuff
+ * GAMES LIST MODE
  *****************************************************************************/
 function loadGamesList() {
-     
+    var resp = ajax("jsIface.py?op=getGames");
+    var lines = resp.split("\n");
+
+    var date = new Date();
+
+    var html = ''
+    html += '<table cellpadding=0 cellspacing=8px>\n'
+    html += '<tr>\n'
+    html += '  <th>time</th>\n'
+    html += '  <th bgcolor=green>winners</th>\n'
+    html += '  <th bgcolor=red>losers</th>\n'
+    html += '</tr>\n'
+
+    for(var i in lines) {
+        if(!lines[i]) {
+            continue;
+        }
+
+        var gameData = lines[i].split(",");
+        var t = parseInt(gameData[0]);
+        var a1 = gameData[1];
+        var a1_r = parseInt(gameData[2]);
+        var a2 = gameData[4];
+        var a2_r = parseInt(gameData[5]);
+        var b1 = gameData[7];
+        var b1_r = parseInt(gameData[8]);
+        var b2 = gameData[10];
+        var b2_r = parseInt(gameData[11]);
+
+        date.setTime(t*1000);
+
+        html += '<tr>\n';
+        html += '  <td>\n';
+        html += date;
+        html += '<br>(' + longAgoStr(date.getTime() / 1000) + " ago)\n"
+        html += '  </td>\n';
+        html += '  <td>\n';
+        html += '    <div class=chesswhite>' + a1 + "(" + a1_r + ")</div>\n";
+        html += '    <div class=chessblack>' + b1 + "(" + b1_r + ")</div>\n";
+        html += '  </td>\n';
+        html += '  <td>\n';
+        html += '    <div class=chessblack>' + a2 + "(" + a2_r + ")</div>\n";
+        html += '    <div class=chesswhite>' + b2 + "(" + b2_r + ")</div>\n";
+        html += '  </td>\n';
+        html += '</tr>\n';
+    }
+
+    html += '</table>\n';
+
+    document.getElementById("games").innerHTML = html;
 }
 
 /******************************************************************************
