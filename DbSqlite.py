@@ -247,6 +247,209 @@ class DbSqlite():
         self.conn.commit()
 
     #--------------------------------------------------------------------------
+    # misc stats stuff
+    #--------------------------------------------------------------------------
+    def getPlayerStatsExtended(self, who):
+        self.c.execute("select count(time) from games");
+        numGamesFromAll = self.c.fetchone()[0]
+
+        self.c.execute("select count(time) from games where (teamAblack==?" +
+            " or teamAwhite==? or teamBwhite==? or teamBblack==?)", (who, who,
+            who, who))
+        numGames = self.c.fetchone()[0]
+
+        self.c.execute("select count(time) from games where (teamAblack==?" +
+            " or teamAwhite==?)", (who, who))
+        numWins = self.c.fetchone()[0]
+
+        self.c.execute("select count(time) from games where (teamBblack==?" +
+            " or teamBwhite==?)", (who, who))
+        numLosses = self.c.fetchone()[0]
+
+        self.c.execute("select count(time) from games where (teamAwhite==?" +
+            " or teamBwhite==?)", (who, who))
+        numWhite = self.c.fetchone()[0]
+
+        self.c.execute("select count(time) from games where (teamAblack==?" +
+            " or teamBblack==?)", (who, who))
+        numBlack = self.c.fetchone()[0]
+
+        #
+        players = self.getPlayerList()
+
+        partnerToWins = {}
+        partnerToLosses = {}
+        partnerToGames = {}
+        oppToWins = {}
+        oppToLosses = {}
+        oppToGames = {}
+
+        for p in players:
+            # partner stuff
+            self.c.execute("select count(time) from games where " +
+                "(teamAwhite==? and teamAblack==?) or (teamAwhite==?" +
+                " and teamAblack==?) or (teamBwhite==? and teamBblack==?)" +
+                " or (teamBwhite==? and teamBblack==?)", 
+                (who, p, p, who, who, p, p, who))
+            partnerToGames[p] = self.c.fetchone()[0]
+
+            self.c.execute("select count(time) from games where " +
+                "(teamAwhite==? and teamAblack==?) or (teamAwhite==?" +
+                " and teamAblack==?)", (who, p, p, who))
+            partnerToWins[p] = self.c.fetchone()[0]
+
+            self.c.execute("select count(time) from games where " +
+                "(teamBwhite==? and teamBblack==?) or (teamBwhite==?" +
+                " and teamBblack==?)", (who, p, p, who))
+            partnerToLosses[p] = self.c.fetchone()[0]
+
+            # opponent stuff
+            self.c.execute("select count(time) from games where " +
+                "((teamAwhite==? or teamAblack==?) and "
+                " (teamBwhite==? or teamBblack==?)) or "
+                "((teamAwhite==? or teamAblack==?) and "
+                " (teamBwhite==? or teamBblack==?))", 
+                (who, who, p, p, p, p, who, who))
+            oppToGames[p] = self.c.fetchone()[0]
+
+            self.c.execute("select count(time) from games where " +
+                "(teamAwhite==? or teamAblack==?) and "
+                "(teamBwhite==? or teamBblack==?)",
+                (who, who, p, p))
+            oppToWins[p] = self.c.fetchone()[0]
+
+            self.c.execute("select count(time) from games where " +
+                "(teamAwhite==? or teamAblack==?) and "
+                "(teamBwhite==? or teamBblack==?)",
+                (p, p, who, who))
+            oppToLosses[p] = self.c.fetchone()[0]
+       
+        # partner win stats
+        partnerMaxWin = 0
+        partnerMaxWinName = ''
+        partnerMaxRatioWin = 0
+        partnerMaxRatioWinName = ''
+
+        for p,w in partnerToWins.iteritems():
+            if not partnerToGames[p]:
+                continue
+
+            if(w > partnerMaxWin):
+                partnerMaxWin = w;
+                partnerMaxWinName = p;
+
+            if(w/partnerToGames[p]*1.0 > partnerMaxRatioWin):
+                partnerMaxRatioWin = w/partnerToGames[p]*1.0
+                partnerMaxRatioWinName = p
+
+        # partner loss stats
+        partnerMaxLoss = 0
+        partnerMaxRatioLoss = 0
+        partnerMaxLossName = ''
+        partnerMaxRatioLossName = ''
+
+        for p,l in partnerToLosses.iteritems():
+            if not partnerToGames[p]:
+                continue
+
+            if(l > partnerMaxLoss):
+                partnerMaxLoss = l;
+                partnerMaxLossName = p;
+
+            if(l/partnerToGames[p]*1.0 > partnerMaxRatioLoss):
+                partnerMaxRatioLoss = l/partnerToGames[p]*1.0
+                partnerMaxRatioLossName = p
+
+        # opponent win stats
+        oppMaxWin = 0
+        oppMaxRatioWin = 0
+        oppMaxWinName = ''
+        oppMaxRatioWinName = ''
+
+        for p,w in oppToWins.iteritems():
+            if not oppToGames[p]:
+                continue
+
+            if(w > oppMaxWin):
+                oppMaxWin = w;
+                oppMaxWinName = p;
+
+            if(w/oppToGames[p]*1.0 > oppMaxRatioWin):
+                oppMaxRatioWin = w/oppToGames[p]*1.0
+                oppMaxRatioWinName = p
+
+        # opp loss stats
+        oppMaxLoss = 0
+        oppMaxRatioLoss = 0
+        oppMaxLossName = ''
+        oppMaxRatioLossName = ''
+
+        for p,l in oppToLosses.iteritems():
+            if not oppToGames[p]:
+                continue
+
+            if(l > oppMaxLoss):
+                oppMaxLoss = l;
+                oppMaxLossName = p;
+
+            if(l/oppToGames[p]*1.0 > oppMaxRatioLoss):
+                oppMaxRatioLoss = l/oppToGames[p]*1.0
+                oppMaxRatioLossName = p
+
+        #print partnerToWins
+        #print partnerToLosses
+        #print partnerToGames
+        #print oppToWins
+        #print oppToLosses
+        #print oppToGames
+
+        answer = ''
+
+        answer += "total games,%d (%.02f%%)\n" % (numGames, 100.0 * numGames/numGamesFromAll)
+        answer += "wins,%d (%.02f%%)\n" % (numWins, 100.0 * numWins/numGames)
+        answer += "losses,%d (%.02f%%)\n" % (numLosses, 100.0 * numLosses/numGames)
+        answer += "plays as white,%d (%.02f%%)\n" % (numWhite, 100.0 * numWhite/numGames)
+        answer += "plays as black,%d (%.02f%%)\n" % (numBlack, 100.0 * numBlack/numGames)
+
+        if partnerMaxWinName:
+            answer += "won most games with partner,%s (%d wins)\n" % (partnerMaxWinName, partnerMaxWin)
+
+        if partnerMaxRatioWinName:
+            answer += "largest win/games ratio with partner,%s at %d/%d (%.02f%%)\n" % \
+                (partnerMaxRatioWinName, 
+                partnerToWins[partnerMaxRatioWinName], partnerToGames[partnerMaxRatioWinName], 
+                partnerMaxRatioWin*100)
+
+        if partnerMaxLossName:
+            answer += "lost most games with partner,%s (%d losses)\n" % (partnerMaxLossName, partnerMaxLoss)
+
+        if partnerMaxRatioLossName:
+            answer += "largest loss/games ratio with partner,%s at %d/%d (%.02f%%)\n" % \
+                (partnerMaxRatioLossName, 
+                partnerToLosses[partnerMaxRatioLossName], partnerToGames[partnerMaxRatioLossName], 
+                partnerMaxRatioLoss*100)
+
+        if oppMaxWinName:
+            answer += "won most games against opp,%s (%d wins)\n" % (oppMaxWinName, oppMaxWin)
+
+        if oppMaxRatioWin:
+            answer += "largest win/games ratio against opp,%s at %d/%d (%.02f%%)\n" % \
+                (oppMaxRatioWinName, 
+                oppToWins[oppMaxRatioWinName], oppToGames[oppMaxRatioWinName], 
+                oppMaxRatioWin*100)
+
+        if oppMaxLossName:
+            answer += "lost most games against opp,%s (%d losses)\n" % (oppMaxLossName, oppMaxLoss)
+
+        if oppMaxRatioLossName:
+            answer += "largest loss/games ratio against opp,%s at %d/%d (%.02f%%)" % \
+                (oppMaxRatioLossName, 
+                oppToLosses[oppMaxRatioLossName], oppToGames[oppMaxRatioLossName], 
+                oppMaxRatioLoss*100)
+
+        return answer
+
+    #--------------------------------------------------------------------------
     # setup/testing stuff
     #--------------------------------------------------------------------------
     #

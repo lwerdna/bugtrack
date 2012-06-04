@@ -163,6 +163,8 @@ function showIStats() {
 
 function showGamesList() {
     hideAllBut(document.getElementById('games'));
+
+    loadGamesList();
 }
 
 function showAdmin() {
@@ -588,8 +590,30 @@ function loadAllRatingsVsGamesGraph() {
  *****************************************************************************/
 function istatsPlayerChoice_cb(elem) {
     if(elem.value != "") {
+        loadIStatsExtended(elem.value);
         loadResultsVsPartnersGraph(elem.value);
+        loadResultsVsOpponentsGraph(elem.value);
     }
+}
+
+function loadIStatsExtended(who) {
+    document.getElementById("IStatsExtended").innerHTML = "loading...";
+
+    var html = ''
+    html += '<table bgcolor=white border=black>'
+    var resp = ajax("jsIface.py?op=getstatsextended&player=" + who)
+    var lines = resp.split("\n");
+    for(var i in lines) {
+        if(!lines[i]) {
+            continue;
+        }
+
+        nameData = lines[i].split(",");
+        html += "<tr><td align=right bgcolor=lightgrey>" + nameData[0] + ":</td><td>" + nameData[1] + "</td></tr>\n"
+    }
+    html += '</center>'
+    document.getElementById("IStatsExtended").innerHTML = html
+
 }
 
 function loadResultsVsPartnersGraph(who) {
@@ -699,6 +723,120 @@ function loadResultsVsPartnersGraph(who) {
     document.getElementById("ResultsVsPartnersGraph_status").innerHTML = "";
 }
 
+function loadResultsVsOpponentsGraph(who) {
+    /* prepare the user for delay */
+    document.getElementById("ResultsVsOpponentsGraph_status").innerHTML = "loading...";
+
+    /* get to work */
+
+    var oppList = [];
+    var oppToObj = {};
+
+    var resp = ajax("jsIface.py?op=getGames");
+    var lines = resp.split("\n");
+    for(var i in lines) {
+        var data = lines[i].split(",");
+        var t = parseInt(data[0]);
+        var a1 = data[1];
+        var a1_r = parseInt(data[2]);
+        var a2 = data[4];
+        var a2_r = parseInt(data[5]);
+        var b1 = data[7];
+        var b1_r = parseInt(data[8]);
+        var b2 = data[10];
+        var b2_r = parseInt(data[11]);
+        var opponents = [];
+        var result;
+
+        if(isNaN(t)) {
+            continue;
+        }
+
+        /* can find opponent? */
+        if(a1 == who) {
+            opponents.push(b1);
+            opponents.push(b2);
+            result = 1;
+        }
+        else if(a2 == who) {
+            opponents.push(b1);
+            opponents.push(b2);
+            result = 1;
+        }
+        else if(b1 == who) {
+            opponents.push(a1);
+            opponents.push(a2);
+            result = 0;
+        }
+        else if(b2 == who) {
+            opponents.push(a1);
+            opponents.push(a2);
+            result = 0;
+        }
+        else {
+            continue;
+        }
+
+        /* create entry if not exist */
+        for(var i in opponents) {
+            if(oppToObj[opponents[i]] == undefined) {
+                oppList.push(opponents[i]);
+                oppToObj[opponents[i]] = { name: "Opponent: " + opponents[i], data: [0,0] }
+            }
+    
+            if(result == 1) {
+                oppToObj[opponents[i]].data[0]++;
+            }
+            else {
+                oppToObj[opponents[i]].data[1]++;
+            }
+        }
+    }
+
+    /* build the series as an array of player objects */
+    var seriesData = [{name: 'Wins', data:[]}, {name: 'Losses', data:[]}];
+    for(var i in oppList) {
+        seriesData[0].data.push(oppToObj[oppList[i]].data[0]);
+        seriesData[1].data.push(oppToObj[oppList[i]].data[1]);
+    }
+
+    /* finally, render the graph into this div */
+    var chart = new Highcharts.Chart(
+        {
+            chart: {
+                renderTo: document.getElementById("ResultsVsOpponentsGraph"), 
+                type: 'bar'
+            },
+            title: {
+                text: 'Player Result vs. Opponents (either color)'
+            },
+            xAxis: {
+                categories: oppList,
+                title: {
+                    text: null
+                }
+            },
+            yAxis: {
+                title: {
+                    text: 'Wins/Losses',
+                    align: 'high'
+                },
+                min: 0
+            },
+            series: seriesData
+        }
+    );
+
+    /* erase the "loading..." message */
+    document.getElementById("ResultsVsOpponentsGraph_status").innerHTML = "";
+}
+
+/******************************************************************************
+ * PLAY MODE stuff
+ *****************************************************************************/
+function loadGamesList() {
+     
+}
 
 /******************************************************************************
  * Glicko 
