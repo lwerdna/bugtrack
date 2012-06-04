@@ -10,14 +10,16 @@
  </head>
 
 
-<body onload="playInit()">
+<body onload="bugtrackInit()">
 <body style="margin:0px">
 
 <div class="menu">
  BugTrack: 
  <input type=submit class="menu" onclick="showPlay()" value="Play" />
- <input type=submit class="menu" onclick="showStats()" value="Stats" />
- <input type=submit class="menu" onclick="showGamesList()" value="Games" />
+ <input type=submit class="menu" onclick="showStats()" value="Overall Stats" />
+ <input type=submit class="menu" onclick="showIStats()" value="Individual Stats" />
+ <input type=submit class="menu" onclick="showGamesList()" value="Games History" />
+ <input type=submit class="menu" onclick="showAdmin()" value="Admin" />
 </div>
 
 <!-- visible by default -->
@@ -92,8 +94,21 @@
  <div id="AllRatingsHistoryGraph" style="min-width: 400px; height: 400px; margin: 0 auto"></div>
 </div>
 
+<div id="istats" style="margin: 1em">
+ Choose Player: <select id="istatsPlayerChoice" onchange='istatsPlayerChoice_cb(this)'>
+ </select> 
+ <br><br>
+
+ <div id="ResultsVsPartnersGraph_status"></div>
+ <div id="ResultsVsPartnersGraph" style="min-width: 400px; height: 400px; margin: 0 auto"></div>
+</div>
+
 <div id="games">
  <h3>Games Page!</h3>
+</div>
+
+<div id="admin">
+ <h3>Admin Page! (add new user, etc.)</h3>
 </div>
 
 </body>
