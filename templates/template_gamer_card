@@ -127,7 +127,20 @@ $(function () {
             series: [{
                 [GAMER_DATA]
             }]
-        });
+//        }); // End chart
+        }, function(chart) {
+            var x  = 20;
+            var xd = 10;
+            var y  = 45;
+            var yd = 18;
+            var yi = 0;
+            chart.renderer.text('Record',             x,   (y+yd*yi++)).add();
+            chart.renderer.text('[GAMER_RECORD]',     x+xd,(y+yd*yi++-3)).add();
+            chart.renderer.text('Last Played',        x,   (y+yd*yi++)).add();
+            chart.renderer.text('[GAMER_LAST_PLAYED]',x+xd,(y+yd*yi++-3)).add();
+            chart.renderer.text('Streak',             x,   (y+yd*yi++)).add();
+            chart.renderer.text('[GAMER_STREAK]',     x+xd,(y+yd*yi++-3)).add();
+        }); // End chart
     });
     
 });
@@ -140,7 +153,7 @@ $(function () {
 <script src="HighCharts/js/highcharts.js"></script>
 <script src="HighCharts/js/modules/exporting.js"></script>
 
-<div id="container" style="width: 400px; height: 200px; margin: 0 auto"></div>
+<div id="container" style="width: 400px; height: 150px; margin: 0 auto"></div>
 
 	</body>
 </html>
