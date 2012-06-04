@@ -43,9 +43,14 @@ function ajax(url) {
     return resp
 }
 
+// stackoverflow, thx Shef!
+function zfill(num, len) {
+    return (Array(len).join("0") + num).slice(-len);
+}
+
 function longAgoStr(epoch) {
-    answer = ''
-    delta = (new Date().getTime() / 1000) - epoch
+    var answer = ''
+    var delta = (new Date().getTime() / 1000) - epoch
 
     if (delta < 60) {
         answer = delta + ' seconds';
@@ -67,6 +72,23 @@ function longAgoStr(epoch) {
     }
 
     return answer
+}
+
+function dateToString(d) {
+    var wDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    var hours = d.getHours()
+
+    var amPm = 'AM'
+
+    if(hours > 12) {
+        amPm = 'PM';
+        hours -= 12;
+    } 
+
+    return wDays[d.getDay()] + ' ' + months[d.getMonth()] + ' ' + d.getDate() + ', ' + (1900+d.getYear()) +
+        ' ' + hours + ':' + zfill(d.getMinutes(), 2) + amPm;
 }
 
 /******************************************************************************
@@ -894,7 +916,7 @@ function loadGamesList() {
 
         html += '<tr>\n';
         html += '  <td>\n';
-        html += date;
+        html += dateToString(date);
         html += '<br>(' + longAgoStr(date.getTime() / 1000) + " ago)\n"
         html += '  </td>\n';
         html += '  <td>\n';
