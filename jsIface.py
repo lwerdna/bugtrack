@@ -74,6 +74,11 @@ if op == 'getstats':
         [rating, rd, t] = db.getPlayerStats(player)
         print "%d,%d,%d" % (rating, rd, t)
 
+if op == 'getstatsextended':
+    player = form['player'].value
+    estats = db.getPlayerStatsExtended(player)
+    print estats,
+
 if op == 'getGames':
     games = db.getGames()
     for g in games:

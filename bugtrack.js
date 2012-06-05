@@ -31,7 +31,7 @@ function debug(msg) {
 }
 
 /******************************************************************************
- * AJAX
+ * UTILS
  *****************************************************************************/
 function ajax(url) {
     var xmlhttp = new XMLHttpRequest();
@@ -41,6 +41,54 @@ function ajax(url) {
     var resp = xmlhttp.responseText;
     debug("AJAX: " + resp)
     return resp
+}
+
+// stackoverflow, thx Shef!
+function zfill(num, len) {
+    return (Array(len).join("0") + num).slice(-len);
+}
+
+function longAgoStr(epoch) {
+    var answer = ''
+    var delta = (new Date().getTime() / 1000) - epoch
+
+    if (delta < 60) {
+        answer = delta + ' seconds';
+    }
+    else if (delta < 3600) {
+        answer = (delta / 60).toFixed(1) + ' minutes';
+    }
+    else if (delta < 86400) {
+        answer = (delta / 3600).toFixed(1) + ' hours';
+    }
+    else if (delta < 2592000) {
+        answer = (delta / 86400).toFixed(1) + ' days';
+    }
+    else if (delta < 31536000) {
+        answer = (delta / 2592000).toFixed(1) + ' months';
+    }
+    else {
+        answer = (delta / 31536000.0).toFixed(1) + ' years';
+    }
+
+    return answer
+}
+
+function dateToString(d) {
+    var wDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    var hours = d.getHours()
+
+    var amPm = 'AM'
+
+    if(hours > 12) {
+        amPm = 'PM';
+        hours -= 12;
+    } 
+
+    return wDays[d.getDay()] + ' ' + months[d.getMonth()] + ' ' + d.getDate() + ', ' + (1900+d.getYear()) +
+        ' ' + hours + ':' + zfill(d.getMinutes(), 2) + amPm;
 }
 
 /******************************************************************************
@@ -163,6 +211,8 @@ function showIStats() {
 
 function showGamesList() {
     hideAllBut(document.getElementById('games'));
+
+    loadGamesList();
 }
 
 function showAdmin() {
@@ -588,8 +638,30 @@ function loadAllRatingsVsGamesGraph() {
  *****************************************************************************/
 function istatsPlayerChoice_cb(elem) {
     if(elem.value != "") {
+        loadIStatsExtended(elem.value);
         loadResultsVsPartnersGraph(elem.value);
+        loadResultsVsOpponentsGraph(elem.value);
     }
+}
+
+function loadIStatsExtended(who) {
+    document.getElementById("IStatsExtended").innerHTML = "loading...";
+
+    var html = ''
+    html += '<table bgcolor=white border=black>'
+    var resp = ajax("jsIface.py?op=getstatsextended&player=" + who)
+    var lines = resp.split("\n");
+    for(var i in lines) {
+        if(!lines[i]) {
+            continue;
+        }
+
+        nameData = lines[i].split(",");
+        html += "<tr><td align=right bgcolor=lightgrey>" + nameData[0] + ":</td><td>" + nameData[1] + "</td></tr>\n"
+    }
+    html += '</center>'
+    document.getElementById("IStatsExtended").innerHTML = html
+
 }
 
 function loadResultsVsPartnersGraph(who) {
@@ -699,6 +771,169 @@ function loadResultsVsPartnersGraph(who) {
     document.getElementById("ResultsVsPartnersGraph_status").innerHTML = "";
 }
 
+function loadResultsVsOpponentsGraph(who) {
+    /* prepare the user for delay */
+    document.getElementById("ResultsVsOpponentsGraph_status").innerHTML = "loading...";
+
+    /* get to work */
+
+    var oppList = [];
+    var oppToObj = {};
+
+    var resp = ajax("jsIface.py?op=getGames");
+    var lines = resp.split("\n");
+    for(var i in lines) {
+        var data = lines[i].split(",");
+        var t = parseInt(data[0]);
+        var a1 = data[1];
+        var a1_r = parseInt(data[2]);
+        var a2 = data[4];
+        var a2_r = parseInt(data[5]);
+        var b1 = data[7];
+        var b1_r = parseInt(data[8]);
+        var b2 = data[10];
+        var b2_r = parseInt(data[11]);
+        var opponents = [];
+        var result;
+
+        if(isNaN(t)) {
+            continue;
+        }
+
+        /* can find opponent? */
+        if(a1 == who) {
+            opponents.push(b1);
+            opponents.push(b2);
+            result = 1;
+        }
+        else if(a2 == who) {
+            opponents.push(b1);
+            opponents.push(b2);
+            result = 1;
+        }
+        else if(b1 == who) {
+            opponents.push(a1);
+            opponents.push(a2);
+            result = 0;
+        }
+        else if(b2 == who) {
+            opponents.push(a1);
+            opponents.push(a2);
+            result = 0;
+        }
+        else {
+            continue;
+        }
+
+        /* create entry if not exist */
+        for(var i in opponents) {
+            if(oppToObj[opponents[i]] == undefined) {
+                oppList.push(opponents[i]);
+                oppToObj[opponents[i]] = { name: "Opponent: " + opponents[i], data: [0,0] }
+            }
+    
+            if(result == 1) {
+                oppToObj[opponents[i]].data[0]++;
+            }
+            else {
+                oppToObj[opponents[i]].data[1]++;
+            }
+        }
+    }
+
+    /* build the series as an array of player objects */
+    var seriesData = [{name: 'Wins', data:[]}, {name: 'Losses', data:[]}];
+    for(var i in oppList) {
+        seriesData[0].data.push(oppToObj[oppList[i]].data[0]);
+        seriesData[1].data.push(oppToObj[oppList[i]].data[1]);
+    }
+
+    /* finally, render the graph into this div */
+    var chart = new Highcharts.Chart(
+        {
+            chart: {
+                renderTo: document.getElementById("ResultsVsOpponentsGraph"), 
+                type: 'bar'
+            },
+            title: {
+                text: 'Player Result vs. Opponents (either color)'
+            },
+            xAxis: {
+                categories: oppList,
+                title: {
+                    text: null
+                }
+            },
+            yAxis: {
+                title: {
+                    text: 'Wins/Losses',
+                    align: 'high'
+                },
+                min: 0
+            },
+            series: seriesData
+        }
+    );
+
+    /* erase the "loading..." message */
+    document.getElementById("ResultsVsOpponentsGraph_status").innerHTML = "";
+}
+
+/******************************************************************************
+ * GAMES LIST MODE
+ *****************************************************************************/
+function loadGamesList() {
+    var resp = ajax("jsIface.py?op=getGames");
+    var lines = resp.split("\n");
+
+    var date = new Date();
+
+    var html = ''
+    html += '<table cellpadding=0 cellspacing=8px>\n'
+    html += '<tr>\n'
+    html += '  <th>time</th>\n'
+    html += '  <th bgcolor=green>winners</th>\n'
+    html += '  <th bgcolor=red>losers</th>\n'
+    html += '</tr>\n'
+
+    for(var i in lines) {
+        if(!lines[i]) {
+            continue;
+        }
+
+        var gameData = lines[i].split(",");
+        var t = parseInt(gameData[0]);
+        var a1 = gameData[1];
+        var a1_r = parseInt(gameData[2]);
+        var a2 = gameData[4];
+        var a2_r = parseInt(gameData[5]);
+        var b1 = gameData[7];
+        var b1_r = parseInt(gameData[8]);
+        var b2 = gameData[10];
+        var b2_r = parseInt(gameData[11]);
+
+        date.setTime(t*1000);
+
+        html += '<tr>\n';
+        html += '  <td>\n';
+        html += dateToString(date);
+        html += '<br>(' + longAgoStr(date.getTime() / 1000) + " ago)\n"
+        html += '  </td>\n';
+        html += '  <td>\n';
+        html += '    <div class=chesswhite>' + a1 + "(" + a1_r + ")</div>\n";
+        html += '    <div class=chessblack>' + b1 + "(" + b1_r + ")</div>\n";
+        html += '  </td>\n';
+        html += '  <td>\n';
+        html += '    <div class=chessblack>' + a2 + "(" + a2_r + ")</div>\n";
+        html += '    <div class=chesswhite>' + b2 + "(" + b2_r + ")</div>\n";
+        html += '  </td>\n';
+        html += '</tr>\n';
+    }
+
+    html += '</table>\n';
+
+    document.getElementById("games").innerHTML = html;
+}
 
 /******************************************************************************
  * Glicko 

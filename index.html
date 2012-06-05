@@ -13,6 +13,7 @@
 <body onload="bugtrackInit()">
 <body style="margin:0px">
 
+<!-- MODE SELECTION -->
 <div class="menu">
  BugTrack: 
  <input type=submit class="menu" onclick="showPlay()" value="Play" />
@@ -22,7 +23,7 @@
  <input type=submit class="menu" onclick="showAdmin()" value="Admin" />
 </div>
 
-<!-- visible by default -->
+<!-- MODE: PLAY -->
 <div id="play">
  <input type=hidden name="op" value="record">
  <table width="100%" cellpadding=12 cellspacing=0>
@@ -86,6 +87,7 @@
  </table>
 </div>
 
+<!-- MODE: OVERALL STATS -->
 <div id="stats" style="margin: 1em">
  <div id="AllRatingsVsGamesGraph_status"></div>
  <div id="AllRatingsVsGamesGraph" style="min-width: 400px; height: 400px; margin: 0 auto"></div>
@@ -94,19 +96,25 @@
  <div id="AllRatingsHistoryGraph" style="min-width: 400px; height: 400px; margin: 0 auto"></div>
 </div>
 
+<!-- MODE: INDIVIDUAL STATS -->
 <div id="istats" style="margin: 1em">
  Choose Player: <select id="istatsPlayerChoice" onchange='istatsPlayerChoice_cb(this)'>
  </select> 
  <br><br>
-
+ <div id="IStatsExtended" style="text-align:center"></div>
+ <br>
  <div id="ResultsVsPartnersGraph_status"></div>
  <div id="ResultsVsPartnersGraph" style="min-width: 400px; height: 400px; margin: 0 auto"></div>
+ <br>
+ <div id="ResultsVsOpponentsGraph_status"></div>
+ <div id="ResultsVsOpponentsGraph" style="min-width: 400px; height: 400px; margin: 0 auto"></div>
 </div>
 
-<div id="games">
- <h3>Games Page!</h3>
+<!-- MODE: GAMES LIST -->
+<div id="games" style="margin: 1em">
 </div>
 
+<!-- MODE: ADMIN (add user / etc.) -->
 <div id="admin">
  <h3>Admin Page! (add new user, etc.)</h3>
 </div>
