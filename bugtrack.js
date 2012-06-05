@@ -53,7 +53,7 @@ function longAgoStr(epoch) {
     var delta = (new Date().getTime() / 1000) - epoch
 
     if (delta < 60) {
-        answer = delta + ' seconds';
+        answer = delta.toFixed(1) + ' seconds';
     }
     else if (delta < 3600) {
         answer = (delta / 60).toFixed(1) + ' minutes';
@@ -351,7 +351,7 @@ function recordGame(elem) {
         /* position winner in locations [0], [1] */
         a1a2b1b2 = [a1a2b1b2[2], a1a2b1b2[3], a1a2b1b2[0], a1a2b1b2[1]]
         ratings = [ratings[2], ratings[3], ratings[0], ratings[1]]
-        rd = [rd[2], rd[3], rd[0], rd[1]]
+        rds = [rds[2], rds[3], rds[0], rds[1]]
         ts = [ts[2], ts[3], ts[0], ts[1]]
     }
     
@@ -672,7 +672,7 @@ function loadIStatsExtended(who) {
     document.getElementById("IStatsExtended").innerHTML = "loading...";
 
     var html = ''
-    html += '<table bgcolor=white border=black>'
+    html += '<table>'
     var resp = ajax("jsIface.py?op=getstatsextended&player=" + who)
     var lines = resp.split("\n");
     for(var i in lines) {
@@ -681,7 +681,7 @@ function loadIStatsExtended(who) {
         }
 
         nameData = lines[i].split(",");
-        html += "<tr><td align=right bgcolor=lightgrey>" + nameData[0] + ":</td><td>" + nameData[1] + "</td></tr>\n"
+        html += "<tr><td align=right><font color=#64788B>" + nameData[0] + ":</font></td><td>" + nameData[1] + "</td></tr>\n"
     }
     html += '</center>'
     document.getElementById("IStatsExtended").innerHTML = html
@@ -793,11 +793,6 @@ function loadResultsVsPartnersGraph(who) {
                     align: 'high'
                 },
                 min: 0
-            },
-            tooltip: {
-                formatter: function() {
-                    return '<b>'+ this.series.name +'</b><br/>'+Highcharts.dateFormat('%e. %b', this.x) +': '+ this.y;
-                }
             },
             series: seriesData
         }
