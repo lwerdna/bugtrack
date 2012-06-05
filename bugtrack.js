@@ -896,6 +896,8 @@ function loadGamesList() {
     html += '  <th bgcolor=red>losers</th>\n'
     html += '</tr>\n'
 
+    lines.reverse();
+
     for(var i in lines) {
         if(!lines[i]) {
             continue;
@@ -921,10 +923,10 @@ function loadGamesList() {
         html += '  </td>\n';
         html += '  <td>\n';
         html += '    <div class=chesswhite>' + a1 + "(" + a1_r + ")</div>\n";
-        html += '    <div class=chessblack>' + b1 + "(" + b1_r + ")</div>\n";
+        html += '    <div class=chessblack>' + a2 + "(" + a2_r + ")</div>\n";
         html += '  </td>\n';
         html += '  <td>\n';
-        html += '    <div class=chessblack>' + a2 + "(" + a2_r + ")</div>\n";
+        html += '    <div class=chessblack>' + b1 + "(" + b1_r + ")</div>\n";
         html += '    <div class=chesswhite>' + b2 + "(" + b2_r + ")</div>\n";
         html += '  </td>\n';
         html += '</tr>\n';
@@ -967,7 +969,7 @@ function secToRatingPeriods(secs) {
 function calcRatingRdPlayer(ratings, rds, rps, w) {
     // rps (rating periods) 
     //debug("rps is: ", rps);
-    rps = Math.min(rps, 365)
+    var rps = Math.min(rps, 365)
 
     // for new player
     for(var i in rds) {
@@ -978,45 +980,62 @@ function calcRatingRdPlayer(ratings, rds, rps, w) {
     }
 
     // RD adjustment due to time
-    rd = rds[0]
+    var rd = rds[0]
     // original glicko squares c here, bughouse does not (mistake? or mod?)
     rd = Math.min(Math.sqrt(Math.pow(rd,2) + c * rps), 350.0)
     //debug("rd: ", rd);
 
     // attenuating factor
-    p = .0000025180996504909944  // 3*Math.log(10)**2 / (Math.PI**2 * 800**2)
-    f = 1/Math.sqrt(1 + p*(Math.pow(rds[1],2) + Math.pow(rds[2],2) + Math.pow(rds[3],2)))
+    var p = .0000025180996504909944  // 3*Math.log(10)**2 / (Math.PI**2 * 800**2)
+    var f = 1/Math.sqrt(1 + p*(Math.pow(rds[1],2) + Math.pow(rds[2],2) + Math.pow(rds[3],2)))
     // f should be [0, 1] ...large RD's result in small f's
     //debug("f: ", f);
 
     // average ratings
-    r1 = (ratings[0]+ratings[1])/2.0
-    r2 = (ratings[2]+ratings[3])/2.0
+    var r1 = (ratings[0]+ratings[1])/2.0
+    var r2 = (ratings[2]+ratings[3])/2.0
 
     //debug("r1: ", r1);
     //debug("r2: ", r2);
-    E = 1/(1 + Math.pow(10, -1*(r1-r2)*f/400))
+    var E = 1/(1 + Math.pow(10, -1*(r1-r2)*f/400))
     //debug("E: ", E);
 
     // begin-pre
     //debug("q=", q);
     //debug("f=", f);
-    denom = 1/(rd*rd) + q*q*f*f*E*(1-E)
+    var denom = 1/(rd*rd) + q*q*f*f*E*(1-E)
     //debug("denom: ", denom
-    K = q*f / denom
+    var K = q*f / denom
     //debug("K: ", K);
     K = Math.max(K,16)
     //debug("K: ", K);
 
     // new rating, new rd
-    rating = ratings[0] + K*(w - E)
-    rd = 1/Math.sqrt(denom)
+    var rating = ratings[0] + K*(w - E)
+    var rd = 1/Math.sqrt(denom)
     //debug("rd before reduction: ", rd);
     rd = Math.min(rd, 350)
     rd = Math.max(rd, 30)
 
     // done
-    return [Math.round(rating), Math.round(rd)]
+    var up = 0;
+
+    var delta = (rating - ratings[0]);
+    if(delta < 0 && delta > -1) {
+        rating = ratings[0] - 1;
+    }
+    else if(delta > 0 && delta < 1) {
+        rating = ratings[0] + 1;
+    }
+
+    rating = Math.round(rating);
+    rd = Math.round(rd);
+
+    if(rating == ratings[0]) {
+        rating = ratings[0] + 1;
+    }
+
+    return [rating, rd];
 }
 
 function calcRatingRdDeltaPlayer(ratings, rds, t, w) {
