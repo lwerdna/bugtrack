@@ -511,8 +511,20 @@ function loadAllRatingsHistoryGraph() {
         {
             chart: {
                 renderTo: document.getElementById("AllRatingsHistoryGraph"), 
-                zoomType: 'x', 
+                zoomType: 'xy', 
                 type: 'line'
+            },
+            plotOptions: {
+               series: {
+                   marker: {
+                       enabled: false,
+                       states: {
+                           hover: {
+                               enabled: true
+                           }
+                       }
+                   }
+               }
             },
             title: {
                 text: 'Player Rating vs. Time'
@@ -602,8 +614,20 @@ function loadAllRatingsVsGamesGraph() {
         {
             chart: {
                 renderTo: document.getElementById("AllRatingsVsGamesGraph"), 
-                zoomType: 'x', 
-                type: 'spline'
+                zoomType: 'xy', 
+                type: 'line'
+            },
+            plotOptions: {
+               series: {
+                   marker: {
+                       enabled: false,
+                       states: {
+                           hover: {
+                               enabled: true
+                           }
+                       }
+                   }
+               }
             },
             title: {
                 text: 'Player Rating vs. Amount Games Played'
@@ -742,6 +766,18 @@ function loadResultsVsPartnersGraph(who) {
                 renderTo: document.getElementById("ResultsVsPartnersGraph"), 
                 type: 'bar'
             },
+            plotOptions: {
+               series: {
+                   marker: {
+                       enabled: false,
+                       states: {
+                           hover: {
+                               enabled: true
+                           }
+                       }
+                   }
+               }
+            },
             title: {
                 text: 'Player Result vs. Partners'
             },
@@ -854,6 +890,18 @@ function loadResultsVsOpponentsGraph(who) {
             chart: {
                 renderTo: document.getElementById("ResultsVsOpponentsGraph"), 
                 type: 'bar'
+            },
+            plotOptions: {
+               series: {
+                   marker: {
+                       enabled: false,
+                       states: {
+                           hover: {
+                               enabled: true
+                           }
+                       }
+                   }
+               }
             },
             title: {
                 text: 'Player Result vs. Opponents (either color)'
