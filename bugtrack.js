@@ -102,6 +102,7 @@ var showElems = [];
 var elem_a1, elem_a2, elem_b1, elem_b2;
 var elem_a1stats, elem_a2stats, elem_b1stats, elem_b2stats;
 var elem_a1predict, elem_a2predict, elem_b1predict, elem_b2predict;
+var lastRecordA1, lastRecordA2, lastRecordB1, lastRecordB2;
 
 var playerElems = [];
 var playerNames = [];
@@ -326,10 +327,21 @@ function selChange_cb(elem) {
     playShowPredictions();
 }
 
+function disableRecordGame() {
+    document.getElementById("TeamAWins").disabled = 1;
+    document.getElementById("TeamBWins").disabled = 1;
+}
+
+function enableRecordGame() {
+    document.getElementById("TeamAWins").disabled = 0;
+    document.getElementById("TeamBWins").disabled = 0;
+}
+
 function recordGame(elem) {
-    var xmlhttp = new XMLHttpRequest();
-    var req = "?op=record&a1=" + elem_a1.value + "&a2=" + elem_a2.value +
-              "&b1=" + elem_b1.value + "&b2=" + elem_b2.value;
+    disableRecordGame();
+
+    /* milliseconds before next game records */
+    var disabledDelay = 5*1000;
 
     var a1a2b1b2 = []
     var ratings = []
@@ -344,7 +356,7 @@ function recordGame(elem) {
         ts.push(playerToT[playerElems[i].value]);
     }
 
-    if(elem.name == "TeamAWins") {
+    if(elem.id == "TeamAWins") {
         /* then arrays are in correct order */
     }
     else {
@@ -354,7 +366,19 @@ function recordGame(elem) {
         rds = [rds[2], rds[3], rds[0], rds[1]]
         ts = [ts[2], ts[3], ts[0], ts[1]]
     }
-    
+   
+    /* warn against dupliate game records */
+    if(a1a2b1b2[0] == lastRecordA1 && a1a2b1b2[1] == lastRecordA2 &&
+        a1a2b1b2[2] == lastRecordB1 && a1a2b1b2[3] == lastRecordB2) {
+        if(confirm('Possible duplicate game; detected same players as last game! Continue anyways?') == false) {
+            return;
+        }
+    }
+    lastRecordA1 = a1a2b1b2[0];
+    lastRecordA2 = a1a2b1b2[1];
+    lastRecordB1 = a1a2b1b2[2];
+    lastRecordB2 = a1a2b1b2[3];
+
     /* convert those last-time-played timestamps to rating periods */
     var tNow = Math.round((new Date()).getTime() / 1000);
 
@@ -384,12 +408,16 @@ function recordGame(elem) {
     ajax(req);
 
     /* message */
-    if(elem.name == "TeamAWins") {
-        alert("Win for " + elem_a1.value + " and " + elem_a2.value + " recorded!");
+    var alertMsg = 'Win for '
+    if(elem.id == "TeamAWins") {
+        alertMsg += elem_a1.value + " and " + elem_a2.value;
     }
-    else if(elem.name == "TeamBWins") {
-        alert("Win for " + elem_b1.value + " and " + elem_b2.value + " recorded!");
+    else if(elem.id == "TeamBWins") {
+        alertMsg += elem_b1.value + " and " + elem_b2.value;
     }
+
+    alertMsg += " recorded!" 
+    alert(alertMsg);
 
     /* now also update the global vars */
     for(var i in a1a2b1b2) {
@@ -401,6 +429,9 @@ function recordGame(elem) {
     /* refresh */
     playShowRatings();
     playShowPredictions();
+
+    /* some seconds from now, re-enable */
+    setTimeout("enableRecordGame();", disabledDelay);
 }
 
 function swapElemVals(a, b)
