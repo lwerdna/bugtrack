@@ -1012,6 +1012,79 @@ function loadGamesList() {
 }
 
 /******************************************************************************
+ * MISC ADMIN
+ *****************************************************************************/
+function recalcScores() {
+    /* clear players' stats */
+    for(var i in playerNames) {
+        playerToR[playerNames[i]] = 1000;
+        playerToRD[playerNames[i]] = 350;
+        playerToT[playerNames[i]] = 0;
+    }
+
+    /* get games */
+    var resp = ajax("jsIface.py?op=getGames");
+    var lines = resp.split("\n");
+
+    /* for each game */
+    for(var i in lines) {
+        var gameData = lines[i].split(",");
+        var t = parseInt(gameData[0]);
+        var a1 = gameData[1];
+        var a2 = gameData[4];
+        var b1 = gameData[7];
+        var b2 = gameData[10];
+
+        if(isNaN(t)) {
+            continue;
+        }
+
+        /* prepare parameters to calculate RESULTING game scores */ 
+        var players = [a1,a2,b1,b2]
+        var ratings = []
+        var rds = []
+        var rps = []
+        for(var j in players) {
+            ratings.push(playerToR[players[j]]);
+            rds.push(playerToRD[players[j]]);
+            rps.push(secToRatingPeriods(t - playerToT[players[j]]));
+        }
+
+        /* calculate new scores for next loop */
+        var results = calcGameScores(ratings, rds, rps); 
+
+        /* save them to database */
+        var req = 'jsIface.py?op=recordGame'
+        req += '&t=' + t
+        req += '&a1=' + a1 + "&a1_r=" + playerToR[a1] + "&a1_rd=" + playerToRD[a1];
+        req += '&a2=' + a2 + "&a2_r=" + playerToR[a2] + "&a2_rd=" + playerToRD[a2];
+        req += '&b1=' + b1 + "&b1_r=" + playerToR[b1] + "&b1_rd=" + playerToRD[b1];
+        req += '&b2=' + b2 + "&b2_r=" + playerToR[b2] + "&b2_rd=" + playerToRD[b2];
+        req += "&a1_r_new=" + results[0][0] + "&a1_rd_new=" + results[0][1];
+        req += "&a2_r_new=" + results[1][0] + "&a2_rd_new=" + results[1][1];
+        req += "&b1_r_new=" + results[2][0] + "&b1_rd_new=" + results[2][1];
+        req += "&b2_r_new=" + results[3][0] + "&b2_rd_new=" + results[3][1];
+        ajax(req);
+
+        /* save them locally, for next loop */
+        playerToR[a1] = results[0][0];
+        playerToRD[a1] = results[0][1];
+        playerToT[a1] = t;
+        playerToR[a2] = results[1][0];
+        playerToRD[a2] = results[1][1];
+        playerToT[a2] = t;
+        playerToR[b1] = results[2][0];
+        playerToRD[b1] = results[2][1];
+        playerToT[b1] = t;
+        playerToR[b2] = results[3][0];
+        playerToRD[b2] = results[3][1];
+        playerToT[b2] = t;
+    }
+
+    debug("done");
+}
+
+/******************************************************************************
  * Glicko 
  *****************************************************************************/
 // Glicko says this works best when rating period has player playing "moderate" 5-10 games
@@ -1136,26 +1209,26 @@ function calcGameScores(ratings, rds, tds) {
 
     // calculate for a1 (first winner, white)
     stats1 = calcRatingRdPlayer(ratings, rds, tds[0], 1)
-    debug("a1 new stats: " + stats1 + '<br>\n');
+    debug("a1 new stats: " + stats1);
 
     // calculate for a2 (first winner, black)
     ratings = [ratings[1], ratings[0], ratings[2], ratings[3]]
     rds = [rds[1], rds[0], rds[2], rds[3]]
     debug("calcRatingRdPlayer(" + ratings + ", " + rds + ", " + tds[1] + ", 1);");
     stats2 = calcRatingRdPlayer(ratings, rds, tds[1], 1)
-    debug("a2 new stats: " + stats2 + '<br>\n');
+    debug("a2 new stats: " + stats2);
 
     // calculate for b1 (first loser, black)
     ratings = [ratings[2], ratings[3], ratings[0], ratings[1]]
     rds = [rds[2], rds[3], rds[0], rds[1]]
     stats3 = calcRatingRdPlayer(ratings, rds, tds[2], 0)
-    debug("b1 new stats: " + stats3 + '<br>\n');
+    debug("b1 new stats: " + stats3);
 
     // calculate for b2 (first loser, white)
     ratings = [ratings[1], ratings[0], ratings[2], ratings[3]]
     rds = [rds[1], rds[0], rds[2], rds[3]]
     stats4 = calcRatingRdPlayer(ratings, rds, tds[3], 0)
-    debug("b2 new stats: " + stats4 + '<br>\n');
+    debug("b2 new stats: " + stats4);
 
     return [stats1, stats2, stats3, stats4]
 }

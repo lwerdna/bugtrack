@@ -171,29 +171,13 @@ class DbSqlite():
         self.conn.commit();
 
     def recordGame(self, data):
-        self.c.execute('INSERT into games values(?,?,?,?,?,?,?,?,?,?,?,?,?)',
+        self.c.execute('INSERT OR REPLACE into games values(?,?,?,?,?,?,?,?,?,?,?,?,?)',
                 (data['t'], 
                 data['a1'], data['a1_r'], data['a1_rd'], 
                 data['a2'], data['a2_r'], data['a2_rd'], 
                 data['b2'], data['b2_r'], data['b2_rd'], 
                 data['b1'], data['b1_r'], data['b1_rd'])
             )
-        self.conn.commit()
-
-    def updateGame(self, data):
-        self.c.execute('UPDATE games set' + 
-            ' teamAwhite=?, teamAwhiteRating=?, teamAwhiteRD=?' +
-            ', teamAblack=?, teamAblackRating=?, teamAblackRD=?' +
-            ', teamBwhite=?, teamBwhiteRating=?, teamBwhiteRD=?' +
-            ', teamBblack=?, teamBblackRating=?, teamBblackRD=?' +
-            ' where time=?',
-            data['a1'], data['a1_r'], data['a1_rd'],
-            data['a2'], data['a2_r'], data['a2_rd'],
-            data['b2'], data['b2_r'], data['b2_rd'],
-            data['b1'], data['b1_r'], data['b1_rd'],
-            data['t']
-        )
-
         self.conn.commit()
 
     #--------------------------------------------------------------------------
