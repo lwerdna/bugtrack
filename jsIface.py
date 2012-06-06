@@ -61,6 +61,10 @@ if op == 'predict':
 
     print "%d,%d" % (winDelta, loseDelta)
 
+if op == 'deleteGame':
+    db.deleteGame(form['t'].value)
+    print "OK",
+
 if op == 'getplayers':
     pl = db.getPlayerList()
     for p in pl:

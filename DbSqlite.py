@@ -161,13 +161,13 @@ class DbSqlite():
         return games
 
     def deleteGame(self, t):
-        self.c.execute('INSERT into games_trash SELECT * from games WHERE time=?', t);
-        self.c.execute('DELETE from games where time=?', t);
+        self.c.execute('INSERT into games_trash SELECT * from games WHERE time=?', (t,));
+        self.c.execute('DELETE from games where time=?', (t,));
         self.conn.commit();
 
     def undeleteGame(self, t):
-        self.c.execute('INSERT into games SELECT * from games_trash WHERE time=?', t);
-        self.c.execute('DELETE from games_trash where time=?', t);
+        self.c.execute('INSERT into games SELECT * from games_trash WHERE time=?', (t,));
+        self.c.execute('DELETE from games_trash where time=?', (t,));
         self.conn.commit();
 
     def recordGame(self, data):

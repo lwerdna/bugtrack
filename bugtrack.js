@@ -1003,6 +1003,9 @@ function loadGamesList() {
         html += '    <div class=chessblack>' + b1 + "(" + b1_r + ")</div>\n";
         html += '    <div class=chesswhite>' + b2 + "(" + b2_r + ")</div>\n";
         html += '  </td>\n';
+        html += '  <td>\n';
+        html += '    <input type=submit value="Delete" onClick="deleteGame_cb(this, ' + t + ')">\n';
+        html += '  </td>\n';
         html += '</tr>\n';
     }
 
@@ -1014,6 +1017,11 @@ function loadGamesList() {
 /******************************************************************************
  * MISC ADMIN
  *****************************************************************************/
+function deleteGame_cb(e, gameId) {
+    ajax("jsIface.py?op=deleteGame&t=" + gameId);
+    e.disabled = 1;
+}
+
 function recalcScores() {
     /* clear players' stats */
     for(var i in playerNames) {
