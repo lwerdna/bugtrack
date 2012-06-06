@@ -5,8 +5,9 @@
 
 import sqlite3
 import string
-from ConfigParser import SafeConfigParser
 import os
+
+dbFile = 'bugtrack.db'
 
 class DbSqlite():
 
@@ -36,151 +37,83 @@ class DbSqlite():
     # Database configuration and initialization ------------------------------
     def createDatabase(self):
         print '\tDropping old tables'
-        cmd = 'DROP TABLE IF EXISTS ' + self.config.get('Database','table_games') + ';'
-        self.c.execute(cmd)
-        cmd = 'DROP TABLE IF EXISTS ' + self.config.get('Database','table_players') + ';'
-        self.c.execute(cmd)
+        cmd = 'drop table if exists games'
+        print cmd
+        self.c.execute(cmd);
+        cmd = 'drop table if exists games_trash'
+        print cmd
+        self.c.execute(cmd);
+        cmd = 'drop table if exists players'
+        print cmd
+        self.c.execute(cmd);
+
         print '\tCreating new tables'
-
-        # Games
-        cmd = 'CREATE TABLE ' + self.config.get('Database','table_games') + ' ('
-        for field in self.SCHEMA_GAMES:
-            cmd += field[0] + ' ' + field[1] + ', '
-        cmd = cmd[:-2]
-        cmd += ');'
+        cmd = 'CREATE TABLE games (' + ','.join(map(lambda x: ' '.join(x), self.SCHEMA_GAMES)) + ')'
+        print cmd
         self.c.execute(cmd)
-
-        # Players
-        cmd = 'CREATE TABLE ' + self.config.get('Database','table_players') + ' ('
-        for field in self.SCHEMA_PLAYERS:
-            cmd += field[0] + ' ' + field[1] + ', '
-        cmd = cmd[:-2]
-        cmd += ');'
+        cmd = 'CREATE TABLE games_trash (' + ','.join(map(lambda x: ' '.join(x), self.SCHEMA_GAMES)) + ')'
+        print cmd
         self.c.execute(cmd)
+        cmd = 'CREATE TABLE players (' + ','.join(map(lambda x: ' '.join(x), self.SCHEMA_PLAYERS)) + ')'
+        print cmd
+        self.c.execute(cmd);
+
         self.conn.commit()
 
     # Clear the database of all entries (Yikes!)
     def clear(self):
         self.createDatabase()
 
-    def genDBEntry(self, schema, table, db_values):
-        cmd = 'INSERT INTO ' + table + '('
-        for field in schema:
-            cmd += field[0] + ','
-        cmd = cmd[:-1]
-        cmd += ') VALUES ('
-        for value in db_values:
-            cmd += str(value) + ','
-        cmd = cmd[:-1]
-        cmd += ');'
-        self.c.execute(cmd)
-        self.conn.commit()
-
-    def importGamesDat(self, filename):
-        print 'Importing game data from [' + filename + ']...'
-        f = open(filename,'r')
-        lines = f.readlines()
-        f.close()
-        for line in lines:
-            time             = line[:10]
-            teamAwhite       = '\'' + line[11:].split(',')[0].split('(')[0] + '\''
-            teamAwhiteRating =        line[11:].split(',')[0].split('(')[1].split(')')[0].split('.')[0]
-            teamAwhiteRD     =        line[11:].split(',')[0].split('(')[1].split(')')[0].split('.')[1]
-            teamAblack       = '\'' + line[11:].split(',')[1].split('(')[0] + '\''
-            teamAblackRating =        line[11:].split(',')[1].split('(')[1].split(')')[0].split('.')[0]
-            teamAblackRD     =        line[11:].split(',')[1].split('(')[1].split(')')[0].split('.')[1] 
-            teamBwhite       = '\'' + line[11:].split(',')[1].split('>')[1].split('(')[0][1:] + '\''
-            teamBwhiteRating =        line[11:].split(',')[1].split('>')[1].split('(')[1].split(')')[0].split('.')[0]
-            teamBwhiteRD     =        line[11:].split(',')[1].split('>')[1].split('(')[1].split(')')[0].split('.')[1]
-            teamBblack       = '\'' + line[11:].split(',')[2].split('(')[0] + '\''
-            teamBblackRating =        line[11:].split(',')[2].split('(')[1].split(')')[0].split('.')[0]
-            teamBblackRD     =        line[11:].split(',')[2].split('(')[1].split(')')[0].split('.')[1]
-            self.genDBEntry(self.SCHEMA_GAMES, self.config.get('Database','table_games'), \
-                [time, \
-                 teamAwhite, teamAwhiteRating, teamAwhiteRD, \
-                 teamAblack, teamAblackRating, teamAblackRD, \
-                 teamBwhite, teamBwhiteRating, teamBwhiteRD, \
-                 teamBblack, teamBblackRating, teamBblackRD])
-
-    def importPlayersDat(self, filename):
-        print 'Importing player data from [' + filename + ']...'
-        f = open(filename,'r')
-        lines = f.readlines()
-        f.close()
-        for line in lines:
-            tokens = line[:-1].split(" ")
-            t      = tokens[len(tokens)-1]
-            rd     = tokens[len(tokens)-2]
-            rating = tokens[len(tokens)-3]
-            player = '\''
-            for i in range(len(tokens) - 3):
-                player += tokens[i] + ' '
-            player = player[:-1] + '\''
-            self.genDBEntry(self.SCHEMA_PLAYERS, self.config.get('Database','table_players'), [player,rating,rd,t])
-
     #--------------------------------------------------------------------------
     # general info
     #--------------------------------------------------------------------------
     # return list of players
     def getPlayerList(self):
-        self.c.execute('SELECT name from ' + self.config.get('Database','table_players') + ';')
-        return list(zip(*self.c.fetchall())[0])
+        self.c.execute('SELECT name from players')
+        return zip(*self.c.fetchall())[0]
 
     #--------------------------------------------------------------------------
-    # get player stats
+    # player stats
     #--------------------------------------------------------------------------
     # get the player's rating
     def getPlayerRating(self, name):
-        self.c.execute('SELECT rating from ' + self.config.get('Database','table_players') + \
-                       ' WHERE (name = \'' + name + '\');')
-        return [ row for row in self.c.fetchall() ][0][0]
+        self.c.execute('SELECT rating from players WHERE name=?', (name,))
+        return self.c.fetchone()[0]
 
     # get the player's RD
     def getPlayerRD(self, name):
-        self.c.execute('SELECT rd from ' + self.config.get('Database','table_players') + \
-                       ' WHERE (name = \'' + name + '\');')
-        return [ row for row in self.c.fetchall() ][0][0]
+        self.c.execute('SELECT rd from players WHERE name=?', (name,))
+        return self.c.fetchone()[0]
 
     # get the player's T (last time played)
     def getPlayerT(self, name):
-        self.c.execute('SELECT time from ' + self.config.get('Database','table_players') + \
-                       ' WHERE (name = \'' + name + '\');')
-        return [ row for row in self.c.fetchall() ][0][0]
+        self.c.execute('SELECT time from players WHERE name=?', (name,))
+        return self.c.fetchone()[0]
 
     # return a list [rating, RD]
     def getPlayerStats(self, name):
-        self.c.execute('SELECT rating,rd,time from ' + self.config.get('Database','table_players') + \
-                       ' WHERE (name = \'' + name + '\');')
-        return [ row for row in self.c.fetchall() ][0]
+        self.c.execute('SELECT rating,rd,time from players WHERE name=?', (name,))
+        return self.c.fetchall()[0]
 
     #--------------------------------------------------------------------------
     # set player stats
     #--------------------------------------------------------------------------
     def addPlayer(self, name, rating=1000, rd=350, t=0):
-        cmd = 'INSERT into ' + self.config.get('Database','table_players') + \
-              ' (name,rating,rd,time) VALUES (\'' +  \
-              name + '\',' + str(rating) + ',' + str(rd) + ',' + str(t) + ');'
-        self.c.execute(cmd)
+        self.c.execute('INSERT into players value(?,?,?,?)', name, rating, rd, t)
         self.conn.commit()
 
     def setPlayerRating(self, name, r):
-        cmd = 'UPDATE ' + self.config.get('Database','table_players') + \
-              ' set rating = ' + str(r) + ' WHERE (name = \'' + name + '\');'
-        self.c.execute(cmd)
+        self.c.execute('UPDATE players SET rating=?', (r,))
         self.conn.commit()
 
     def setPlayerRD(self, name, rd):
-        cmd = 'UPDATE ' + self.config.get('Database','table_players') + \
-              ' set rd = ' + str(rd) + ' WHERE (name = \'' + name + '\');'
-        self.c.execute(cmd)
+        self.c.execute('UPDATE players SET rd=?', (r,))
         self.conn.commit()
 
     def setPlayerStats(self, name, listStats):
-        cmd = 'INSERT or REPLACE INTO ' + self.config.get('Database','table_players') + \
-              '(name,rating,rd,time) VALUES (' + \
-              '\'' + name + '\', ' + \
-              str(listStats[0]) + ',' + str(listStats[1]) + ',' + str(listStats[2]) + ')'
-        self.c.execute(cmd)
+        self.c.execute('UPDATE players SET rating=?, rd=? ,time=? WHERE name=?',
+                (listStats[0], listStats[1], listStats[2], name)
+            )
         self.conn.commit()
 
     #--------------------------------------------------------------------------
@@ -197,53 +130,70 @@ class DbSqlite():
     #
     # (change this comment if the db schema changes please)
     def getGames(self, since=0):
-        self.c.execute('SELECT * from ' + self.config.get('Database','table_games') + \
-                       ' WHERE (time > ' + str(since) + ') order by time;')
+        self.c.execute('SELECT * from games WHERE time>(?) order by time', (since,))
 
         games = []
         for x in self.c.fetchall():
             games.append({'t':x[0], \
                           'a1':str(x[1]), 'a1_r':x[2], 'a1_rd':x[3], \
                           'a2':str(x[4]), 'a2_r':x[5], 'a2_rd':x[6], \
-                          'b1':str(x[7]), 'b1_r':x[8], 'b1_rd':x[9], \
-                          'b2':str(x[10]),'b2_r':x[11],'b2_rd':x[12]})
+                          'b2':str(x[7]), 'b2_r':x[8], 'b2_rd':x[9], \
+                          'b1':str(x[10]),'b1_r':x[11],'b1_rd':x[12]})
+
         return games
 
     # retrieve all games that had player involved in it
     def getGamesByPlayer(self, name, since=0):
-        self.c.execute('SELECT * from ' + self.config.get('Database','table_games') + \
-                       ' WHERE ((' + \
-                       '(teamAwhite =  \"' + name + '\") OR '\
-                       '(teamAblack =  \"' + name + '\") OR '\
-                       '(teamBwhite =  \"' + name + '\") OR '\
-                       '(teamBblack =  \"' + name + '\")) AND '\
-                       '(time > ' + str(since) + ')) ' \
-                       'ORDER by time;')
+        self.c.execute('SELECT * from games WHERE' +
+            ' teamAwhite=? or teamAblack=? or teamBwhite=? or teamBblack=?' +
+            ' and time>(?)' +
+            ' ORDER by time',
+            (name, name, name, name, since)
+        )
 
         games = []
         for x in self.c.fetchall():
             games.append({'t':x[0], \
                           'a1':str(x[1]), 'a1_r':x[2], 'a1_rd':x[3], \
                           'a2':str(x[4]), 'a2_r':x[5], 'a2_rd':x[6], \
-                          'b1':str(x[7]), 'b1_r':x[8], 'b1_rd':x[9], \
-                          'b2':str(x[10]),'b2_r':x[11],'b2_rd':x[12]})
+                          'b2':str(x[7]), 'b2_r':x[8], 'b2_rd':x[9], \
+                          'b1':str(x[10]),'b1_r':x[11],'b1_rd':x[12]})
         return games
 
+    def deleteGame(self, t):
+        self.c.execute('INSERT into games_trash SELECT * from games WHERE time=?', t);
+        self.c.execute('DELETE from games where time=?', t);
+        self.conn.commit();
+
+    def undeleteGame(self, t):
+        self.c.execute('INSERT into games SELECT * from games_trash WHERE time=?', t);
+        self.c.execute('DELETE from games_trash where time=?', t);
+        self.conn.commit();
+
     def recordGame(self, data):
-        cmd = 'INSERT INTO ' + self.config.get('Database','table_games') + '('
-        for field in self.SCHEMA_GAMES:
-             cmd += field[0] + ','
-        cmd = cmd[:-1]
-        cmd += ') VALUES (\''
-        for value in (data['t'], \
-                      data['a1'], data['a1_r'], data['a1_rd'], \
-                      data['a2'], data['a2_r'], data['a2_rd'], \
-                      data['b1'], data['b1_r'], data['b1_rd'], \
-                      data['b2'], data['b2_r'], data['b2_rd']):
-            cmd += str(value) + '\',\''
-        cmd = cmd[:-3]
-        cmd += '\');'
-        self.c.execute(cmd)
+        self.c.execute('INSERT into games values(?,?,?,?,?,?,?,?,?,?,?,?,?)',
+                (data['t'], 
+                data['a1'], data['a1_r'], data['a1_rd'], 
+                data['a2'], data['a2_r'], data['a2_rd'], 
+                data['b2'], data['b2_r'], data['b2_rd'], 
+                data['b1'], data['b1_r'], data['b1_rd'])
+            )
+        self.conn.commit()
+
+    def updateGame(self, data):
+        self.c.execute('UPDATE games set' + 
+            ' teamAwhite=?, teamAwhiteRating=?, teamAwhiteRD=?' +
+            ', teamAblack=?, teamAblackRating=?, teamAblackRD=?' +
+            ', teamBwhite=?, teamBwhiteRating=?, teamBwhiteRD=?' +
+            ', teamBblack=?, teamBblackRating=?, teamBblackRD=?' +
+            ' where time=?',
+            data['a1'], data['a1_r'], data['a1_rd'],
+            data['a2'], data['a2_r'], data['a2_rd'],
+            data['b2'], data['b2_r'], data['b2_rd'],
+            data['b1'], data['b1_r'], data['b1_rd'],
+            data['t']
+        )
+
         self.conn.commit()
 
     #--------------------------------------------------------------------------
@@ -454,11 +404,6 @@ class DbSqlite():
     #--------------------------------------------------------------------------
     #
     def __init__(self):
-        # Read configuration file
-        self.config = SafeConfigParser()
-        self.config.read('DbSqlite.ini')
-        dbFile = self.config.get('Database','filename')
-
         # Determine if the database already exists
         createDB = 1
         if ( os.path.exists(dbFile) ):
