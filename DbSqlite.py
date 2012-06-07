@@ -28,6 +28,11 @@ class DbSqlite():
             ['teamBblack',      'TEXT'],     # Loser  - Black player
             ['teamBblackRating','INTEGER'],  # Loser  - Black player rating
             ['teamBblackRD',    'INTEGER']]  # Loser  - Black player RD
+    SCHEMA_ACHIEVEMENTS = [
+            ['id',    'INTEGER PRIMARY KEY'],
+            ['name',  'TEXT'],     # Player Name
+            ['title', 'INTEGER'],  # Achievement title
+            ['time',  'REAL']]     # Timestamp of achievement 
     SCHEMA_PLAYERS = [
             ['name',  'TEXT PRIMARY KEY'],     # Name
             ['rating','INTEGER'],  # Rating

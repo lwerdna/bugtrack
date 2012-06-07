@@ -92,7 +92,7 @@ $(function () {
             },
             title: {
                 text: '[GAMER_NAME]',
-                align: 'left'
+                align: 'left', x:25 
             },
             plotOptions: {
                 series: {
@@ -140,6 +140,7 @@ $(function () {
             chart.renderer.text('[GAMER_LAST_PLAYED]',x+xd,(y+yd*yi++-3)).add();
             chart.renderer.text('Streak',             x,   (y+yd*yi++)).add();
             chart.renderer.text('[GAMER_STREAK]',     x+xd,(y+yd*yi++-3)).add();
+            chart.renderer.image('[GAMER_BADGE]',12,10,16,16).add();
         }); // End chart
     });
     
