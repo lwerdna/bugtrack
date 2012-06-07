@@ -102,6 +102,7 @@ var showElems = [];
 var elem_a1, elem_a2, elem_b1, elem_b2;
 var elem_a1stats, elem_a2stats, elem_b1stats, elem_b2stats;
 var elem_a1predict, elem_a2predict, elem_b1predict, elem_b2predict;
+var lastRecordA1, lastRecordA2, lastRecordB1, lastRecordB2;
 
 var playerElems = [];
 var playerNames = [];
@@ -326,10 +327,21 @@ function selChange_cb(elem) {
     playShowPredictions();
 }
 
+function disableRecordGame() {
+    document.getElementById("TeamAWins").disabled = 1;
+    document.getElementById("TeamBWins").disabled = 1;
+}
+
+function enableRecordGame() {
+    document.getElementById("TeamAWins").disabled = 0;
+    document.getElementById("TeamBWins").disabled = 0;
+}
+
 function recordGame(elem) {
-    var xmlhttp = new XMLHttpRequest();
-    var req = "?op=record&a1=" + elem_a1.value + "&a2=" + elem_a2.value +
-              "&b1=" + elem_b1.value + "&b2=" + elem_b2.value;
+    disableRecordGame();
+
+    /* milliseconds before next game records */
+    var disabledDelay = 5*1000;
 
     var a1a2b1b2 = []
     var ratings = []
@@ -344,7 +356,7 @@ function recordGame(elem) {
         ts.push(playerToT[playerElems[i].value]);
     }
 
-    if(elem.name == "TeamAWins") {
+    if(elem.id == "TeamAWins") {
         /* then arrays are in correct order */
     }
     else {
@@ -354,7 +366,19 @@ function recordGame(elem) {
         rds = [rds[2], rds[3], rds[0], rds[1]]
         ts = [ts[2], ts[3], ts[0], ts[1]]
     }
-    
+   
+    /* warn against dupliate game records */
+    if(a1a2b1b2[0] == lastRecordA1 && a1a2b1b2[1] == lastRecordA2 &&
+        a1a2b1b2[2] == lastRecordB1 && a1a2b1b2[3] == lastRecordB2) {
+        if(confirm('Possible duplicate game; detected same players as last game! Continue anyways?') == false) {
+            return;
+        }
+    }
+    lastRecordA1 = a1a2b1b2[0];
+    lastRecordA2 = a1a2b1b2[1];
+    lastRecordB1 = a1a2b1b2[2];
+    lastRecordB2 = a1a2b1b2[3];
+
     /* convert those last-time-played timestamps to rating periods */
     var tNow = Math.round((new Date()).getTime() / 1000);
 
@@ -384,12 +408,16 @@ function recordGame(elem) {
     ajax(req);
 
     /* message */
-    if(elem.name == "TeamAWins") {
-        alert("Win for " + elem_a1.value + " and " + elem_a2.value + " recorded!");
+    var alertMsg = 'Win for '
+    if(elem.id == "TeamAWins") {
+        alertMsg += elem_a1.value + " and " + elem_a2.value;
     }
-    else if(elem.name == "TeamBWins") {
-        alert("Win for " + elem_b1.value + " and " + elem_b2.value + " recorded!");
+    else if(elem.id == "TeamBWins") {
+        alertMsg += elem_b1.value + " and " + elem_b2.value;
     }
+
+    alertMsg += " recorded!" 
+    alert(alertMsg);
 
     /* now also update the global vars */
     for(var i in a1a2b1b2) {
@@ -401,6 +429,9 @@ function recordGame(elem) {
     /* refresh */
     playShowRatings();
     playShowPredictions();
+
+    /* some seconds from now, re-enable */
+    setTimeout("enableRecordGame();", disabledDelay);
 }
 
 function swapElemVals(a, b)
@@ -972,12 +1003,93 @@ function loadGamesList() {
         html += '    <div class=chessblack>' + b1 + "(" + b1_r + ")</div>\n";
         html += '    <div class=chesswhite>' + b2 + "(" + b2_r + ")</div>\n";
         html += '  </td>\n';
+        html += '  <td>\n';
+        html += '    <input type=submit value="Delete" onClick="deleteGame_cb(this, ' + t + ')">\n';
+        html += '  </td>\n';
         html += '</tr>\n';
     }
 
     html += '</table>\n';
 
     document.getElementById("games").innerHTML = html;
+}
+
+/******************************************************************************
+ * MISC ADMIN
+ *****************************************************************************/
+function deleteGame_cb(e, gameId) {
+    ajax("jsIface.py?op=deleteGame&t=" + gameId);
+    e.disabled = 1;
+}
+
+function recalcScores() {
+    /* clear players' stats */
+    for(var i in playerNames) {
+        playerToR[playerNames[i]] = 1000;
+        playerToRD[playerNames[i]] = 350;
+        playerToT[playerNames[i]] = 0;
+    }
+
+    /* get games */
+    var resp = ajax("jsIface.py?op=getGames");
+    var lines = resp.split("\n");
+
+    /* for each game */
+    for(var i in lines) {
+        var gameData = lines[i].split(",");
+        var t = parseInt(gameData[0]);
+        var a1 = gameData[1];
+        var a2 = gameData[4];
+        var b1 = gameData[7];
+        var b2 = gameData[10];
+
+        if(isNaN(t)) {
+            continue;
+        }
+
+        /* prepare parameters to calculate RESULTING game scores */ 
+        var players = [a1,a2,b1,b2]
+        var ratings = []
+        var rds = []
+        var rps = []
+        for(var j in players) {
+            ratings.push(playerToR[players[j]]);
+            rds.push(playerToRD[players[j]]);
+            rps.push(secToRatingPeriods(t - playerToT[players[j]]));
+        }
+
+        /* calculate new scores for next loop */
+        var results = calcGameScores(ratings, rds, rps); 
+
+        /* save them to database */
+        var req = 'jsIface.py?op=recordGame'
+        req += '&t=' + t
+        req += '&a1=' + a1 + "&a1_r=" + playerToR[a1] + "&a1_rd=" + playerToRD[a1];
+        req += '&a2=' + a2 + "&a2_r=" + playerToR[a2] + "&a2_rd=" + playerToRD[a2];
+        req += '&b1=' + b1 + "&b1_r=" + playerToR[b1] + "&b1_rd=" + playerToRD[b1];
+        req += '&b2=' + b2 + "&b2_r=" + playerToR[b2] + "&b2_rd=" + playerToRD[b2];
+        req += "&a1_r_new=" + results[0][0] + "&a1_rd_new=" + results[0][1];
+        req += "&a2_r_new=" + results[1][0] + "&a2_rd_new=" + results[1][1];
+        req += "&b1_r_new=" + results[2][0] + "&b1_rd_new=" + results[2][1];
+        req += "&b2_r_new=" + results[3][0] + "&b2_rd_new=" + results[3][1];
+        ajax(req);
+
+        /* save them locally, for next loop */
+        playerToR[a1] = results[0][0];
+        playerToRD[a1] = results[0][1];
+        playerToT[a1] = t;
+        playerToR[a2] = results[1][0];
+        playerToRD[a2] = results[1][1];
+        playerToT[a2] = t;
+        playerToR[b1] = results[2][0];
+        playerToRD[b1] = results[2][1];
+        playerToT[b1] = t;
+        playerToR[b2] = results[3][0];
+        playerToRD[b2] = results[3][1];
+        playerToT[b2] = t;
+    }
+
+    debug("done");
 }
 
 /******************************************************************************
@@ -1105,26 +1217,26 @@ function calcGameScores(ratings, rds, tds) {
 
     // calculate for a1 (first winner, white)
     stats1 = calcRatingRdPlayer(ratings, rds, tds[0], 1)
-    debug("a1 new stats: " + stats1 + '<br>\n');
+    debug("a1 new stats: " + stats1);
 
     // calculate for a2 (first winner, black)
     ratings = [ratings[1], ratings[0], ratings[2], ratings[3]]
     rds = [rds[1], rds[0], rds[2], rds[3]]
     debug("calcRatingRdPlayer(" + ratings + ", " + rds + ", " + tds[1] + ", 1);");
     stats2 = calcRatingRdPlayer(ratings, rds, tds[1], 1)
-    debug("a2 new stats: " + stats2 + '<br>\n');
+    debug("a2 new stats: " + stats2);
 
     // calculate for b1 (first loser, black)
     ratings = [ratings[2], ratings[3], ratings[0], ratings[1]]
     rds = [rds[2], rds[3], rds[0], rds[1]]
     stats3 = calcRatingRdPlayer(ratings, rds, tds[2], 0)
-    debug("b1 new stats: " + stats3 + '<br>\n');
+    debug("b1 new stats: " + stats3);
 
     // calculate for b2 (first loser, white)
     ratings = [ratings[1], ratings[0], ratings[2], ratings[3]]
     rds = [rds[1], rds[0], rds[2], rds[3]]
     stats4 = calcRatingRdPlayer(ratings, rds, tds[3], 0)
-    debug("b2 new stats: " + stats4 + '<br>\n');
+    debug("b2 new stats: " + stats4);
 
     return [stats1, stats2, stats3, stats4]
 }
