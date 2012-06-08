@@ -200,6 +200,7 @@ function showStats() {
     hideAllBut(document.getElementById('stats'));
 
     // each graph has a function dedicated to loading it...
+    loadLeaderBoard();
     loadAllRatingsVsGamesGraph();
     loadAllRatingsHistoryGraph();
 }
@@ -485,6 +486,33 @@ function clearTeamB(elem)
 /******************************************************************************
  * OVERALL STATS MODE stuff
  *****************************************************************************/
+function loadLeaderBoard() {
+    document.getElementById("LeaderBoard").innerHTML = "loading...";
+
+    rankedPlayers = playerNames;
+    rankedPlayers.sort(function(a,b){ return playerToR[b]-playerToR[a] });
+
+    var html = ''
+    html += '<table>'
+    html += '<tr><th colspan=3>Leader Board!</th></tr>'
+
+    var place = 1;
+    for(var i in rankedPlayers) {
+        p = rankedPlayers[i]
+
+        if(playerToRD[p] > 200) {
+            continue;
+        }
+
+        html += "<tr><td>" + place + ")</td><td align=right><font color=#64788B>" + p +  
+        "</font></td><td>" + playerToR[p] + '.' + playerToRD[p] + "</td></tr>\n"
+
+        place++;
+    }
+    html += '</center>'
+    document.getElementById("LeaderBoard").innerHTML = html
+}
+
 function loadAllRatingsHistoryGraph() {
     /* prepare the user for delay */
     document.getElementById("AllRatingsHistoryGraph_status").innerHTML = "loading...";
