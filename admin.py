@@ -5,8 +5,8 @@ import sys
 import time
 import random
 
-import glicko
-import DbText
+#import glicko
+#import DbText
 import DbSqlite
 
 if __name__ == "__main__":
@@ -30,6 +30,12 @@ if __name__ == "__main__":
         # add all games
         for g in db.getGames():
             db2.recordGame(g)
+
+    if sys.argv[1] == "offsetGameTime":
+        if len(sys.argv) != 3:
+            print 'admin.py offsetGameTime <offset>'
+            exit(-1)
+        db.offsetGameTime(sys.argv[2])
 
     if sys.argv[1] == "recalculate":
         players = db.getPlayerList()

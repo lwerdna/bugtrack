@@ -62,6 +62,8 @@ def genPlayerCard(player):
             streak += 'es'
     lastPlayed = datetime.fromtimestamp(db.getPlayerT(player)).strftime('%d %b %y')
 
+    badge = 'images/rank/' + str(record[0]/10) + '.png'
+
     f = open('templates/template_gamer_card','r')
     template = f.read()
     f.close()
@@ -71,6 +73,7 @@ def genPlayerCard(player):
     template = template.replace('[GAMER_RECORD]', str(record[0]) + '-' + str(record[1]))
     template = template.replace('[GAMER_STREAK]', streak)
     template = template.replace('[GAMER_LAST_PLAYED]', lastPlayed)
+    template = template.replace('[GAMER_BADGE]', badge)
 
     f = open('card_' + player.replace(' ','_') + '.htm','w')
     f.write(template)
