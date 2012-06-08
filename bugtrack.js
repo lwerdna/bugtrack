@@ -493,6 +493,7 @@ function loadAllRatingsHistoryGraph() {
     var playerList = []
     var playerToObject = {}
 
+    /* each game offers a sample point */
     var resp = ajax("jsIface.py?op=getGames");
     var lines = resp.split("\n");
     for(var i in lines) {
@@ -515,9 +516,9 @@ function loadAllRatingsHistoryGraph() {
         var ratings = [a1_r, a2_r, b1_r, b2_r];
 
         /* update each player's data from the game */
-        for(var i in players) {
-            var p = players[i];
-            var r = ratings[i];
+        for(var j in players) {
+            var p = players[j];
+            var r = ratings[j];
 
             /* create if not exist yet */
             if(playerToObject[p] == undefined) {
@@ -529,6 +530,18 @@ function loadAllRatingsHistoryGraph() {
             /* recall that the 'datetime' type of xAxis in highcharts expects milliseconds */
             playerToObject[p]['data'].push([t*1000, r]);
         }
+    }
+
+    /* finally, push the current ratings as the last sample point for each present player */
+    tNow = (new Date()).getTime()
+    for(var i in playerNames) {
+        p = playerNames[i]
+
+        if(playerToObject[p] == undefined) {
+            continue;
+        }
+
+        playerToObject[p]['data'].push([tNow, playerToR[p]])
     }
 
     /* build the series as an array of player objects */
