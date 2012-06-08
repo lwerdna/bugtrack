@@ -719,6 +719,7 @@ function loadIStatsExtended(who) {
     html += '<table>'
     var resp = ajax("jsIface.py?op=getstatsextended&player=" + who)
     var lines = resp.split("\n");
+
     for(var i in lines) {
         if(!lines[i]) {
             continue;

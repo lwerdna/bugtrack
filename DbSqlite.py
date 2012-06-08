@@ -5,6 +5,7 @@
 
 import sqlite3
 import string
+import time
 import os
 
 dbFile = 'bugtrack.db'
@@ -184,6 +185,9 @@ class DbSqlite():
     # misc stats stuff
     #--------------------------------------------------------------------------
     def getPlayerStatsExtended(self, who):
+        self.c.execute("select rating, rd, time from players where name=?", (who,));
+        [rating,rd,tLastGame] = self.c.fetchone()
+
         self.c.execute("select count(time) from games");
         numGamesFromAll = self.c.fetchone()[0]
 
@@ -339,6 +343,8 @@ class DbSqlite():
 
         answer = ''
 
+        answer += "rating,%d.%d\n" % (rating, rd)
+        answer += "last played,%s\n" % time.strftime("%a %b %d %Y %H:%M:%S", time.localtime(tLastGame))
         answer += "total games,%d (%.02f%%)\n" % (numGames, 100.0 * numGames/numGamesFromAll)
         answer += "wins,%d (%.02f%%)\n" % (numWins, 100.0 * numWins/numGames)
         answer += "losses,%d (%.02f%%)\n" % (numLosses, 100.0 * numLosses/numGames)
