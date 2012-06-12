@@ -74,6 +74,49 @@ function longAgoStr(epoch) {
     return answer
 }
 
+function longAgoStrStealth(epoch) {
+    var answer = '';
+    var delta = (new Date().getTime() / 1000) - epoch;
+    var wDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+    var dateNow = new Date();
+    var dateThen = new Date();
+    dateThen.setTime(epoch*1000);
+
+    /* if within the last 60 seconds, display "X seconds ago" */
+    if (delta < 60) {
+        answer = delta.toFixed(1) + ' seconds ago';
+    }
+    /* if within the last 10 minutes, display "X minutes ago" */
+    else if (delta < 10*60) {
+        answer = (delta / 60).toFixed(1) + ' minutes ago';
+    }
+    /* if within the last day, just say "today" */
+    else if (delta < 24*60*60) {
+        answer = 'today';
+    }
+    /* if within the last 2 days, just say "yesterday" */
+    else if (delta < 2*24*60*60) {
+        answer = 'yesterday';
+    }
+    /* if within a week */
+    else if (delta < 7*24*60*60) {
+
+        if(dateThen.getDay() < dateNow.getDay()) {
+            answer = 'this ' + wDays[dateThen.getDay()];
+        }
+        else {
+            answer = 'last ' + wDays[dateThen.getDay()]; 
+        }
+    }
+    /* print the date and the days ago string */
+    else {
+        answer = dateToStringMini(dateNow) + '<br>\n(' + longAgoStr(epoch) + ' ago )';
+    }
+
+    return answer
+}
+
 function dateToString(d) {
     var wDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -89,6 +132,22 @@ function dateToString(d) {
 
     return wDays[d.getDay()] + ' ' + months[d.getMonth()] + ' ' + d.getDate() + ', ' + (1900+d.getYear()) +
         ' ' + hours + ':' + zfill(d.getMinutes(), 2) + amPm;
+}
+
+function dateToStringMini(d) {
+    var wDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    var hours = d.getHours()
+
+    var amPm = 'AM'
+
+    if(hours > 12) {
+        amPm = 'PM';
+        hours -= 12;
+    } 
+
+    return wDays[d.getDay()] + ' ' + months[d.getMonth()] + ' ' + d.getDate() + ', ' + (1900+d.getYear());
 }
 
 /******************************************************************************
@@ -1034,8 +1093,7 @@ function loadGamesList() {
 
         html += '<tr>\n';
         html += '  <td>\n';
-        html += dateToString(date);
-        html += '<br>(' + longAgoStr(date.getTime() / 1000) + " ago)\n"
+        html += longAgoStrStealth(date.getTime() / 1000) + "\n"
         html += '  </td>\n';
         html += '  <td>\n';
         html += '    <div class=chesswhite>' + a1 + "(" + a1_r + ")</div>\n";
