@@ -207,7 +207,7 @@ function bugtrackInit(x) {
     elem_b2predict = document.getElementById("b2_predict");
 
     /* init global player vars */
-    var resp = ajax('jsIface.py?op=getplayers')
+    var resp = ajax('cgi/jsIface.py?op=getplayers')
     var lines = resp.split("\n")
     for(var j in lines) {
         var m = lines[j].match(/^(.*),(.*),(.*),(.*)$/);
@@ -447,7 +447,7 @@ function recordGame(elem) {
     }
 
     /* build the ajax request */
-    var req = 'jsIface.py?op=recordGame'
+    var req = 'cgi/jsIface.py?op=recordGame'
 
     /* game stats: players, OLD r's, OLD rd's */
     req += '&t=' + tNow;
@@ -581,7 +581,7 @@ function loadAllRatingsHistoryGraph() {
     var playerToObject = {}
 
     /* each game offers a sample point */
-    var resp = ajax("jsIface.py?op=getGames");
+    var resp = ajax("cgi/jsIface.py?op=getGames");
     var lines = resp.split("\n");
     for(var i in lines) {
         var data = lines[i].split(",");
@@ -694,7 +694,7 @@ function loadAllRatingsVsGamesGraph() {
     var playerList = []
     var playerToObject = {}
 
-    var resp = ajax("jsIface.py?op=getGames");
+    var resp = ajax("cgi/jsIface.py?op=getGames");
     var lines = resp.split("\n");
     for(var i in lines) {
         var data = lines[i].split(",");
@@ -804,7 +804,7 @@ function loadIStatsExtended(who) {
 
     var html = ''
     html += '<table>'
-    var resp = ajax("jsIface.py?op=getstatsextended&player=" + who)
+    var resp = ajax("cgi/jsIface.py?op=getstatsextended&player=" + who)
     var lines = resp.split("\n");
 
     for(var i in lines) {
@@ -829,7 +829,7 @@ function loadResultsVsPartnersGraph(who) {
     var partnerList = [];
     var partnerToObj = {};
 
-    var resp = ajax("jsIface.py?op=getGames");
+    var resp = ajax("cgi/jsIface.py?op=getGames");
     var lines = resp.split("\n");
     for(var i in lines) {
         var data = lines[i].split(",");
@@ -943,7 +943,7 @@ function loadResultsVsOpponentsGraph(who) {
     var oppList = [];
     var oppToObj = {};
 
-    var resp = ajax("jsIface.py?op=getGames");
+    var resp = ajax("cgi/jsIface.py?op=getGames");
     var lines = resp.split("\n");
     for(var i in lines) {
         var data = lines[i].split(",");
@@ -1058,7 +1058,7 @@ function loadResultsVsOpponentsGraph(who) {
  * GAMES LIST MODE
  *****************************************************************************/
 function loadGamesList() {
-    var resp = ajax("jsIface.py?op=getGames");
+    var resp = ajax("cgi/jsIface.py?op=getGames");
     var lines = resp.split("\n");
 
     var date = new Date();
@@ -1118,7 +1118,7 @@ function loadGamesList() {
  * MISC ADMIN
  *****************************************************************************/
 function deleteGame_cb(e, gameId) {
-    ajax("jsIface.py?op=deleteGame&t=" + gameId);
+    ajax("cgi/jsIface.py?op=deleteGame&t=" + gameId);
     e.disabled = 1;
 }
 
@@ -1131,7 +1131,7 @@ function recalcScores() {
     }
 
     /* get games */
-    var resp = ajax("jsIface.py?op=getGames");
+    var resp = ajax("cgi/jsIface.py?op=getGames");
     var lines = resp.split("\n");
 
     /* for each game */
@@ -1162,7 +1162,7 @@ function recalcScores() {
         var results = calcGameScores(ratings, rds, rps); 
 
         /* save them to database */
-        var req = 'jsIface.py?op=recordGame'
+        var req = 'cgi/jsIface.py?op=recordGame'
         req += '&t=' + t
         req += '&a1=' + a1 + "&a1_r=" + playerToR[a1] + "&a1_rd=" + playerToRD[a1];
         req += '&a2=' + a2 + "&a2_r=" + playerToR[a2] + "&a2_rd=" + playerToRD[a2];
