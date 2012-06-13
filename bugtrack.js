@@ -62,13 +62,57 @@ function longAgoStr(epoch) {
         answer = (delta / 3600).toFixed(1) + ' hours';
     }
     else if (delta < 2592000) {
-        answer = (delta / 86400).toFixed(1) + ' days';
+        answer = (delta / 86400).toFixed(0) + ' days';
     }
     else if (delta < 31536000) {
-        answer = (delta / 2592000).toFixed(1) + ' months';
+        answer = (delta / 2592000).toFixed(0) + ' months';
     }
     else {
-        answer = (delta / 31536000.0).toFixed(1) + ' years';
+        answer = (delta / 31536000.0).toFixed(0) + ' years';
+    }
+
+    return answer
+}
+
+function longAgoStrStealth(epoch) {
+    var answer = '';
+    var delta = (new Date().getTime() / 1000) - epoch;
+    var wDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+    var dateNow = new Date();
+    var dateThen = new Date();
+    dateThen.setTime(epoch*1000);
+
+    /* if within the last 60 seconds, display "X seconds ago" */
+    if (delta < 60) {
+        answer = delta.toFixed(1) + ' seconds ago';
+    }
+    /* if within the last 10 minutes, display "X minutes ago" */
+    else if (delta < 10*60) {
+        answer = (delta / 60).toFixed(1) + ' minutes ago';
+    }
+    /* if within the last day, just say "today" */
+    else if (delta < 24*60*60) {
+        if(dateNow.getDay() != dateThen.getDay()) {
+            answer = 'yesterday';
+        }
+        else {
+            answer = 'today';
+        }
+    }
+    /* if within a week */
+    else if (delta < 7*24*60*60) {
+
+        if(dateThen.getDay() < dateNow.getDay()) {
+            answer = 'this ' + wDays[dateThen.getDay()];
+        }
+        else {
+            answer = 'last ' + wDays[dateThen.getDay()]; 
+        }
+    }
+    /* print the date and the days ago string */
+    else {
+        answer = dateToStringMini(dateNow) + '<br>\n(' + longAgoStr(epoch) + ' ago )';
     }
 
     return answer
@@ -89,6 +133,22 @@ function dateToString(d) {
 
     return wDays[d.getDay()] + ' ' + months[d.getMonth()] + ' ' + d.getDate() + ', ' + (1900+d.getYear()) +
         ' ' + hours + ':' + zfill(d.getMinutes(), 2) + amPm;
+}
+
+function dateToStringMini(d) {
+    var wDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    var hours = d.getHours()
+
+    var amPm = 'AM'
+
+    if(hours > 12) {
+        amPm = 'PM';
+        hours -= 12;
+    } 
+
+    return wDays[d.getDay()] + ' ' + months[d.getMonth()] + ' ' + d.getDate() + ', ' + (1900+d.getYear());
 }
 
 /******************************************************************************
@@ -148,7 +208,7 @@ function bugtrackInit(x) {
     elem_b2predict = document.getElementById("b2_predict");
 
     /* init global player vars */
-    var resp = ajax('jsIface.py?op=getplayers')
+    var resp = ajax('cgi/jsIface.py?op=getplayers')
     var lines = resp.split("\n")
     for(var j in lines) {
         var m = lines[j].match(/^(.*),(.*),(.*),(.*)$/);
@@ -362,10 +422,10 @@ function recordGame(elem) {
     }
     else {
         /* position winner in locations [0], [1] */
-        a1a2b1b2 = [a1a2b1b2[2], a1a2b1b2[3], a1a2b1b2[0], a1a2b1b2[1]]
-        ratings = [ratings[2], ratings[3], ratings[0], ratings[1]]
-        rds = [rds[2], rds[3], rds[0], rds[1]]
-        ts = [ts[2], ts[3], ts[0], ts[1]]
+        a1a2b1b2 = [a1a2b1b2[3], a1a2b1b2[2], a1a2b1b2[1], a1a2b1b2[0]]
+        ratings = [ratings[3], ratings[2], ratings[1], ratings[0]]
+        rds = [rds[3], rds[2], rds[1], rds[0]]
+        ts = [ts[3], ts[2], ts[1], ts[0]]
     }
    
     /* warn against dupliate game records */
@@ -388,7 +448,7 @@ function recordGame(elem) {
     }
 
     /* build the ajax request */
-    var req = 'jsIface.py?op=recordGame'
+    var req = 'cgi/jsIface.py?op=recordGame'
 
     /* game stats: players, OLD r's, OLD rd's */
     req += '&t=' + tNow;
@@ -522,7 +582,7 @@ function loadAllRatingsHistoryGraph() {
     var playerToObject = {}
 
     /* each game offers a sample point */
-    var resp = ajax("jsIface.py?op=getGames");
+    var resp = ajax("cgi/jsIface.py?op=getGames");
     var lines = resp.split("\n");
     for(var i in lines) {
         var data = lines[i].split(",");
@@ -635,7 +695,7 @@ function loadAllRatingsVsGamesGraph() {
     var playerList = []
     var playerToObject = {}
 
-    var resp = ajax("jsIface.py?op=getGames");
+    var resp = ajax("cgi/jsIface.py?op=getGames");
     var lines = resp.split("\n");
     for(var i in lines) {
         var data = lines[i].split(",");
@@ -745,7 +805,7 @@ function loadIStatsExtended(who) {
 
     var html = ''
     html += '<table>'
-    var resp = ajax("jsIface.py?op=getstatsextended&player=" + who)
+    var resp = ajax("cgi/jsIface.py?op=getstatsextended&player=" + who)
     var lines = resp.split("\n");
 
     for(var i in lines) {
@@ -770,7 +830,7 @@ function loadResultsVsPartnersGraph(who) {
     var partnerList = [];
     var partnerToObj = {};
 
-    var resp = ajax("jsIface.py?op=getGames");
+    var resp = ajax("cgi/jsIface.py?op=getGames");
     var lines = resp.split("\n");
     for(var i in lines) {
         var data = lines[i].split(",");
@@ -884,7 +944,7 @@ function loadResultsVsOpponentsGraph(who) {
     var oppList = [];
     var oppToObj = {};
 
-    var resp = ajax("jsIface.py?op=getGames");
+    var resp = ajax("cgi/jsIface.py?op=getGames");
     var lines = resp.split("\n");
     for(var i in lines) {
         var data = lines[i].split(",");
@@ -999,7 +1059,7 @@ function loadResultsVsOpponentsGraph(who) {
  * GAMES LIST MODE
  *****************************************************************************/
 function loadGamesList() {
-    var resp = ajax("jsIface.py?op=getGames");
+    var resp = ajax("cgi/jsIface.py?op=getGames");
     var lines = resp.split("\n");
 
     var date = new Date();
@@ -1034,8 +1094,7 @@ function loadGamesList() {
 
         html += '<tr>\n';
         html += '  <td>\n';
-        html += dateToString(date);
-        html += '<br>(' + longAgoStr(date.getTime() / 1000) + " ago)\n"
+        html += longAgoStrStealth(date.getTime() / 1000) + "\n"
         html += '  </td>\n';
         html += '  <td>\n';
         html += '    <div class=chesswhite>' + a1 + "(" + a1_r + ")</div>\n";
@@ -1060,7 +1119,7 @@ function loadGamesList() {
  * MISC ADMIN
  *****************************************************************************/
 function deleteGame_cb(e, gameId) {
-    ajax("jsIface.py?op=deleteGame&t=" + gameId);
+    ajax("cgi/jsIface.py?op=deleteGame&t=" + gameId);
     e.disabled = 1;
 }
 
@@ -1073,7 +1132,7 @@ function recalcScores() {
     }
 
     /* get games */
-    var resp = ajax("jsIface.py?op=getGames");
+    var resp = ajax("cgi/jsIface.py?op=getGames");
     var lines = resp.split("\n");
 
     /* for each game */
@@ -1104,7 +1163,7 @@ function recalcScores() {
         var results = calcGameScores(ratings, rds, rps); 
 
         /* save them to database */
-        var req = 'jsIface.py?op=recordGame'
+        var req = 'cgi/jsIface.py?op=recordGame'
         req += '&t=' + t
         req += '&a1=' + a1 + "&a1_r=" + playerToR[a1] + "&a1_rd=" + playerToRD[a1];
         req += '&a2=' + a2 + "&a2_r=" + playerToR[a2] + "&a2_rd=" + playerToRD[a2];
