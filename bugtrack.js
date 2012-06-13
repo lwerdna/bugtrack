@@ -62,13 +62,13 @@ function longAgoStr(epoch) {
         answer = (delta / 3600).toFixed(1) + ' hours';
     }
     else if (delta < 2592000) {
-        answer = (delta / 86400).toFixed(1) + ' days';
+        answer = (delta / 86400).toFixed(0) + ' days';
     }
     else if (delta < 31536000) {
-        answer = (delta / 2592000).toFixed(1) + ' months';
+        answer = (delta / 2592000).toFixed(0) + ' months';
     }
     else {
-        answer = (delta / 31536000.0).toFixed(1) + ' years';
+        answer = (delta / 31536000.0).toFixed(0) + ' years';
     }
 
     return answer
@@ -93,11 +93,12 @@ function longAgoStrStealth(epoch) {
     }
     /* if within the last day, just say "today" */
     else if (delta < 24*60*60) {
-        answer = 'today';
-    }
-    /* if within the last 2 days, just say "yesterday" */
-    else if (delta < 2*24*60*60) {
-        answer = 'yesterday';
+        if(dateNow.getDay() != dateThen.getDay()) {
+            answer = 'yesterday';
+        }
+        else {
+            answer = 'today';
+        }
     }
     /* if within a week */
     else if (delta < 7*24*60*60) {
@@ -421,10 +422,10 @@ function recordGame(elem) {
     }
     else {
         /* position winner in locations [0], [1] */
-        a1a2b1b2 = [a1a2b1b2[2], a1a2b1b2[3], a1a2b1b2[0], a1a2b1b2[1]]
-        ratings = [ratings[2], ratings[3], ratings[0], ratings[1]]
-        rds = [rds[2], rds[3], rds[0], rds[1]]
-        ts = [ts[2], ts[3], ts[0], ts[1]]
+        a1a2b1b2 = [a1a2b1b2[3], a1a2b1b2[2], a1a2b1b2[1], a1a2b1b2[0]]
+        ratings = [ratings[3], ratings[2], ratings[1], ratings[0]]
+        rds = [rds[3], rds[2], rds[1], rds[0]]
+        ts = [ts[3], ts[2], ts[1], ts[0]]
     }
    
     /* warn against dupliate game records */
