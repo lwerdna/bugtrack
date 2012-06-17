@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <title>
+      BugTrack - Bughouse Tracking Software
+    </title>
+    <script src="raphael-min.js"></script>
+    <script src="card-gen.js"></script>
+    <script src="bugtrack.js"></script>
+  </head>
+
+  <body>
+    <table>
+        <tr>
+            <td><div id="AW_card"></div></td>
+            <td><div id="BB_card"></div></td>
+        </tr>
+        <tr>
+            <td><div id="AB_card"></div></td>
+            <td><div id="BW_card"></div></td>
+        </tr>
+    </table>
+    <script type="text/javascript">
+      window.onload = function() {
+          drawCard("James Thompson","AW_card");
+          drawCard("Japheth Light","AB_card");
+          drawCard("Larry Waldo","BW_card");
+          drawCard("Taylor Goodson","BB_card");
+      }
+    </script> 
+  </body>
+</html>
