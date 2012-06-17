@@ -1,49 +1,33 @@
 <!DOCTYPE html>
 <html>
+
   <head>
+    <title>
+      BugTrack - Bughouse Tracking Software
+    </title>
     <script src="raphael-min.js"></script>
+    <script src="card-gen.js"></script>
+    <script src="bugtrack.js"></script>
   </head>
+
   <body>
-
+    <table>
+        <tr>
+            <td><div id="AW_card"></div></td>
+            <td><div id="BB_card"></div></td>
+        </tr>
+        <tr>
+            <td><div id="AB_card"></div></td>
+            <td><div id="BW_card"></div></td>
+        </tr>
+    </table>
     <script type="text/javascript">
-      //var ctx=document.getElementById("myCanvas").getContext("2d");
-      //ctx.strokeRect(10,10,330,130);
-
       window.onload = function() {
-
-          var c_width  = 350;   // Card width
-          var c_height = 200;   // Card height
-          var c_border = 10;    // Card border from canvas
-          var c_edge   = 15;    // Card border corner softness
-
-          var player = "James T."
-
-          var paper = Raphael(0, 0, c_width, c_height);
-
-          // Card background
-          var card = paper.rect(c_border, 
-                                 c_border, 
-                                 c_width - 2 * c_border, 
-                                 c_height - 2 * c_border, 
-                                 c_edge); 
-          card.attr({fill:"#eef", stroke: '#000',  'stroke-width': 2});
-
-          // Player title and stats
-          var title = paper.text(25,35,player);
-          title.attr({'text-anchor': 'start', 'font-size':25, 'font-family':'stencil'});
-
-          var stat_01 = paper.text(40,60,'Record');
-          stat_01.attr({'text-anchor': 'start', 'font-size':15, 'font-family':'aharoni'});
-          var val_01  = paper.text(100,59,'[113-81]');
-          val_01.attr({'text-anchor': 'start', 'font-size':15, 'font-family':'consolas'});
-
-          var stat_01 = paper.text(40,80,'Streak');
-          stat_01.attr({'text-anchor': 'start', 'font-size':15, 'font-family':'aharoni'});
-          var val_02  = paper.text(100,79,'1 Win');
-          val_02.attr({'text-anchor': 'start', 'font-size':15, 'font-family':'consolas'});
+          drawCard("James Thompson","AW_card");
+          drawCard("Japheth Light","AB_card");
+          drawCard("Larry Waldo","BW_card");
+          drawCard("Taylor Goodson","BB_card");
       }
-
     </script> 
-
   </body>
 </html>

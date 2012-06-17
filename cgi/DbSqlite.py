@@ -189,6 +189,45 @@ class DbSqlite():
     #--------------------------------------------------------------------------
     # misc stats stuff
     #--------------------------------------------------------------------------
+    def getPlayerCardStats(self, who):
+        # Rating, RD
+        self.c.execute("select rating, rd from players where name=?", (who,));
+        [rating,rd] = self.c.fetchone()
+        
+        # Rank
+        self.c.execute("select count(*) from players where (rating >= (select rating from players where name =?))", (who,));
+        rank = self.c.fetchone()[0]
+
+        # Streak
+        streak = 0
+        self.c.execute("select max(time) from games where (teamAblack==?" +
+            " or teamAwhite==?)", (who, who))
+        lastWin = self.c.fetchone()[0]
+        self.c.execute("select max(time) from games where (teamBblack==?" +
+            " or teamBwhite==?)", (who, who))
+        lastLoss = self.c.fetchone()[0]
+        if (lastWin > lastLoss):
+            self.c.execute("select count(time) from games where ((teamAblack==?" +
+                " or teamAwhite==?) and (time>?))", (who, who,lastLoss))
+            streak = self.c.fetchone()[0]
+        else:
+            self.c.execute("select count(time) from games where ((teamBblack==?" +
+                " or teamBwhite==?) and (time>?))", (who, who,lastWin))
+            streak = self.c.fetchone()[0]
+
+        # Wins
+        self.c.execute("select count(time) from games where (teamAblack==?" +
+            " or teamAwhite==?)", (who, who))
+        numWins = self.c.fetchone()[0]
+
+        # Losses
+        self.c.execute("select count(time) from games where (teamBblack==?" +
+            " or teamBwhite==?)", (who, who))
+        numLosses = self.c.fetchone()[0]
+
+        # Create the response
+        return [rating,rd,rank,numWins,numLosses,streak]
+
     def getPlayerStatsExtended(self, who):
         self.c.execute("select rating, rd, time from players where name=?", (who,));
         [rating,rd,tLastGame] = self.c.fetchone()
