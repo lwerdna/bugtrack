@@ -68,12 +68,12 @@ function drawCard(playerName,container) {
   var streak_str = '';
   if (playerStreak > 0) {
       streak_str = playerStreak + ' Win'
-      if (playerStreak >= 1) {
+      if (playerStreak > 1) {
         streak_str += 's';
       }
   } else {
       streak_str = (playerStreak * -1) + ' Loss'
-      if (playerStreak <= -1) {
+      if (playerStreak < -1) {
         streak_str += 'es';
       }
   }
