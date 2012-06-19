@@ -55,7 +55,7 @@ div.chessBlack {
 
 div.menu {
     background-color: grey;
-    font-size: small;
+    font-size: medium;
     margin: 0px;
     padding: 2px;
     padding-left: 8px;
@@ -63,7 +63,7 @@ div.menu {
 }
 
 input.menu {
-    font-size: small;
+    font-size: medium;
     border: 1px solid black;
     margin: 0px;
 }
