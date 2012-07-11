@@ -1,33 +1,12 @@
 /******************************************************************************
  * debug
  *****************************************************************************/
-// [0,3] from least to greatest
-var g_DEBUG_LEVEL = 1
-
-function debug3(msg) {
-    if(g_DEBUG_LEVEL >= 3) {
-        console.log(msg)
-    }
-}
-
-function debug2(msg) {
-    if(g_DEBUG_LEVEL >= 2) {
-        console.log(msg)
-    }
-}
-
-function debug1(msg) {
-    if(g_DEBUG_LEVEL >= 1) {
-        console.log(msg)
-    }
-}
-
-function debug0(msg) {
-    console.log(msg)
-}
+var g_DEBUG = 1
 
 function debug(msg) {
-    console.log(msg)
+    if(g_DEBUG) {
+        console.log(msg)
+    }
 }
 
 /******************************************************************************
@@ -667,7 +646,7 @@ function schedTogglePlayer(elem, who)
     }
 }
 
-function schedGetHeadRandomized() {
+function schedGetHead() {
     var names = []
 
     /* find the current 4 */
@@ -686,28 +665,15 @@ function schedGetHeadRandomized() {
         alert("ERROR: less than 4 people scheduled!")
         return
     }
-
-    /* scramble the names */
-    var rChoice = []
-    for(var i=0; i<8; ++i) {
-        j = Math.floor((Math.random()*4))
-        k = Math.floor((Math.random()*4))
-
-        var temp = names[j] 
-        names[j] = names[k]
-        names[k] = temp
-    }
-
-    return names
+   
+    return names;
 }
 
-function schedLoadPlayers()
+function schedLoadPlayers(names)
 {
-    var names = schedGetHeadRandomized()
-
-    /* load them into the player slots */
+    /* load them into the player slots 
+        by convention: left board is 0,1 and right board is 2,3 */
     elem_a1.value = names[0]
-    elem_a1.selected = true
     elem_a2.value = names[1]
     elem_b1.value = names[2]
     elem_b2.value = names[3]
@@ -720,6 +686,43 @@ function schedLoadPlayers()
 
     /* show the play screen */
     showPlay()
+}
+    
+function schedLoadPlayersRandom()
+{
+    var names = schedGetHead()
+
+    if(names) {
+        /* scramble the names */
+        for(var i=0; i<8; ++i) {
+            j = Math.floor((Math.random()*4))
+            k = Math.floor((Math.random()*4))
+
+            var temp = names[j] 
+            names[j] = names[k]
+            names[k] = temp
+        }
+ 
+        schedLoadPlayers(names);
+    }
+}
+
+function schedLoadPlayersFair()
+{
+    var names = schedGetHead()
+
+    /* sort names, best to worst */
+    names.sort(function(a,b) { return playerToR[b]-playerToR[a] })
+
+    /* 0,3 vs. 1,2 */
+    names = [names[0], names[3], names[1], names[2]]
+
+    /* randomly flip black/white */
+    if(Math.floor(Math.random()*2)) {
+        names = [names[1], names[0], names[3], names[2]]
+    }
+
+    schedLoadPlayers(names);
 }
 
 /******************************************************************************
@@ -1484,7 +1487,7 @@ function calcRatingWinLossDeltaPlayer(ratings, rds, ts) {
     tNow = Math.round((new Date()).getTime() / 1000)
     winRandRD = calcRatingRdDeltaPlayer(ratings, rds, secToRatingPeriods(tNow - ts[0]), 1)
     loseRandRD = calcRatingRdDeltaPlayer(ratings, rds, secToRatingPeriods(tNow - ts[0]), 0)
-    debug("(winDelta, loseDelta) = (" + winRandRD[0] + "," + loseRandRD[0] + ")\n")
+    //debug("(winDelta, loseDelta) = (" + winRandRD[0] + "," + loseRandRD[0] + ")\n")
     return [winRandRD[0], loseRandRD[0]]
 }
 
