@@ -564,7 +564,7 @@ function clearTeamB(elem)
 
 function schedCycle()
 {
-    var names = schedGetHeadRandomized()
+    var names = schedGetHead()
 
     for(var i in names) {
         schedRemovePlayer(names[i])
