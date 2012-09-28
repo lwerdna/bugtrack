@@ -4,8 +4,6 @@
     BugTrack - Bughouse Tracking Software
    </title>
    <link rel=StyleSheet href="stylesheet.css" type="text/css">
-   <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-   <script type="text/javascript" src="./HighCharts/js/highcharts.js"></script>
    <script type="text/javascript" src="./bugtrack.js"></script>
  </head>
 
@@ -18,8 +16,6 @@
  BugTrack: 
  <input type=submit class="menu" onclick="showPlay()" value="Play" />
  <input type=submit class="menu" onclick="showScheduler()" value="Scheduler" />
- <input type=submit class="menu" onclick="showStats()" value="Overall Stats" />
- <input type=submit class="menu" onclick="showIStats()" value="Individual Stats" />
  <input type=submit class="menu" onclick="showGamesList()" value="Games History" />
  <input type=submit class="menu" onclick="showAdmin()" value="Admin" />
 </div>
@@ -96,31 +92,6 @@
  <input type=submit value="Load Random" onclick=schedLoadPlayersRandom() />
  <h2>Choose present players:</h2>
  <div id="schedulerPlayerList"></div>
-</div>
-
-<!-- MODE: OVERALL STATS -->
-<div id="stats" style="margin: 1em">
- <div id="LeaderBoard" style="text-align:center"></div>
- <br>
- <div id="AllRatingsVsGamesGraph_status"></div>
- <div id="AllRatingsVsGamesGraph" style="min-width: 400px; height: 400px; margin: 0 auto"></div>
- <br>
- <div id="AllRatingsHistoryGraph_status"></div>
- <div id="AllRatingsHistoryGraph" style="min-width: 400px; height: 400px; margin: 0 auto"></div>
-</div>
-
-<!-- MODE: INDIVIDUAL STATS -->
-<div id="istats" style="margin: 1em">
- Choose Player: <select id="istatsPlayerChoice" onchange='istatsPlayerChoice_cb(this)'>
- </select> 
- <br><br>
- <div id="IStatsExtended" style="text-align:center"></div>
- <br>
- <div id="ResultsVsPartnersGraph_status"></div>
- <div id="ResultsVsPartnersGraph" style="min-width: 400px; height: 400px; margin: 0 auto"></div>
- <br>
- <div id="ResultsVsOpponentsGraph_status"></div>
- <div id="ResultsVsOpponentsGraph" style="min-width: 400px; height: 400px; margin: 0 auto"></div>
 </div>
 
 <!-- MODE: GAMES LIST -->

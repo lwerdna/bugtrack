@@ -1,0 +1,59 @@
+<html>
+ <head>
+   <title>
+    BugTrack - Bughouse Tracking Software
+   </title>
+   <link rel=StyleSheet href="stylesheet.css" type="text/css">
+   <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+   <script type="text/javascript" src="./HighCharts/js/highcharts.js"></script>
+   <script type="text/javascript" src="./bugtrack.js"></script>
+ </head>
+
+
+<body onload="bugtrackInit()">
+<body style="margin:0px">
+
+<!-- MODE SELECTION -->
+<div class="menu">
+ BugTrack: 
+ <input type=submit class="menu" onclick="showStats()" value="Overall Stats" />
+ <input type=submit class="menu" onclick="showIStats()" value="Individual Stats" />
+ <input type=submit class="menu" onclick="showGamesList()" value="Games History" />
+</div>
+
+<!-- MODE: OVERALL STATS -->
+<div id="stats" style="margin: 1em">
+ <div id="LeaderBoard" style="text-align:center"></div>
+ <br>
+ <div id="AllRatingsVsGamesGraph_status"></div>
+ <div id="AllRatingsVsGamesGraph" style="min-width: 400px; height: 400px; margin: 0 auto"></div>
+ <br>
+ <div id="AllRatingsHistoryGraph_status"></div>
+ <div id="AllRatingsHistoryGraph" style="min-width: 400px; height: 400px; margin: 0 auto"></div>
+</div>
+
+<!-- MODE: INDIVIDUAL STATS -->
+<div id="istats" style="margin: 1em">
+ Choose Player: <select id="istatsPlayerChoice" onchange='istatsPlayerChoice_cb(this)'>
+ </select> 
+ <br><br>
+ <div id="IStatsExtended" style="text-align:center"></div>
+ <br>
+ <div id="ResultsVsPartnersGraph_status"></div>
+ <div id="ResultsVsPartnersGraph" style="min-width: 400px; height: 400px; margin: 0 auto"></div>
+ <br>
+ <div id="ResultsVsOpponentsGraph_status"></div>
+ <div id="ResultsVsOpponentsGraph" style="min-width: 400px; height: 400px; margin: 0 auto"></div>
+</div>
+
+<!-- MODE: GAMES LIST -->
+<div id="games" style="margin: 1em">
+</div>
+
+<!-- MODE: ADMIN (add user / etc.) -->
+<div id="admin">
+ <h3>Admin Page! (add new user, etc.)</h3>
+</div>
+
+</body>
+</html>

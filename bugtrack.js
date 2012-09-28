@@ -150,9 +150,6 @@ var playerToR = []
 var playerToRD = []
 var playerToT = []
 
-/* istats */
-var elem_istatsPlayerChoice
-
 /******************************************************************************
  * inner-mode functions
  *****************************************************************************/
@@ -162,8 +159,8 @@ function bugtrackInit(x) {
     /* overall modes; play is the default */
     showElems.push(document.getElementById("play"))
     showElems.push(document.getElementById("scheduler"))
-    showElems.push(document.getElementById("stats"))
-    showElems.push(document.getElementById("istats"))
+    //showElems.push(document.getElementById("stats"))
+    //showElems.push(document.getElementById("istats"))
     showElems.push(document.getElementById("games"))
     showElems.push(document.getElementById("admin"))
     showPlay()
@@ -190,9 +187,6 @@ function bugtrackInit(x) {
     schedCheckElems = []
     schedDisplayElems = []
 
-    /* individual stats mode */
-    elem_istatsPlayerChoice = document.getElementById("istatsPlayerChoice")
-
     /* init global player vars */
     var resp = ajax('cgi/jsIface.py?op=getplayers')
     var lines = resp.split("\n")
@@ -210,7 +204,8 @@ function bugtrackInit(x) {
 
     /* populate player choice drop-downs */
     playerNames.sort()
-    var elems = [elem_a1, elem_a2, elem_b1, elem_b2, istatsPlayerChoice]
+    //var elems = [elem_a1, elem_a2, elem_b1, elem_b2, istatsPlayerChoice]
+    var elems = [elem_a1, elem_a2, elem_b1, elem_b2]
     for(var i in elems) {
         elems[i].value = ''
         elems[i].innerHTML = '<option></option>'
@@ -400,21 +395,8 @@ function selChange_cb(elem) {
     playShowPredictions()
 }
 
-function disableRecordGame() {
-    document.getElementById("TeamAWins").disabled = 1
-    document.getElementById("TeamBWins").disabled = 1
-}
-
-function enableRecordGame() {
-    document.getElementById("TeamAWins").disabled = 0
-    document.getElementById("TeamBWins").disabled = 0
-}
-
 function recordGame(elem) {
-    disableRecordGame()
-
     /* milliseconds before next game records */
-    var disabledDelay = 5*1000
 
     var a1a2b1b2 = []
     var ratings = []
@@ -505,9 +487,6 @@ function recordGame(elem) {
 
     /* if scheduling was enabled, cycle these guys to back of line */
     schedCycle()
-
-    /* some seconds from now, re-enable */
-    setTimeout("enableRecordGame();", disabledDelay)
 }
 
 function swapElemVals(a, b)
@@ -564,11 +543,13 @@ function clearTeamB(elem)
 
 function schedCycle()
 {
-    var names = schedGetHeadRandomized()
+    var names = schedGetHead()
 
-    for(var i in names) {
-        schedRemovePlayer(names[i])
-        schedAddPlayer(names[i])
+    if(names) {
+        for(var i in names) {
+            schedRemovePlayer(names[i])
+            schedAddPlayer(names[i])
+        }
     }
 }
 
@@ -662,7 +643,7 @@ function schedGetHead() {
     }
 
     if(names.length != 4) {
-        alert("ERROR: less than 4 people scheduled!")
+        //alert("ERROR: less than 4 people scheduled!")
         return
     }
    
