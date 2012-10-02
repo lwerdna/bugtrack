@@ -144,17 +144,12 @@ var elem_a1predict, elem_a2predict, elem_b1predict, elem_b2predict
 var lastRecordA1, lastRecordA2, lastRecordB1, lastRecordB2
 var elem_autopick
 
-/* the four currently-playing player elements */
 var playerElems = []
-/* mapping from the player name to his number from the database */
-var playerToIndex = []
-
-var playerToSchedWeight = []
-var playerToSchedProbabilityElem = []
 var playerNames = []
 var playerToR = []
 var playerToRD = []
 var playerToT = []
+
 /******************************************************************************
  * inner-mode functions
  *****************************************************************************/
@@ -190,6 +185,7 @@ function bugtrackInit(x) {
     /* scheduler mode */
     elem_schedPlayerList = document.getElementById("schedulerPlayerList")
     schedCheckElems = []
+    schedDisplayElems = []
 
     /* init global player vars */
     var resp = ajax('cgi/jsIface.py?op=getplayers')
@@ -200,7 +196,6 @@ function bugtrackInit(x) {
         if(m) {
             playerName = m[1]
             playerNames.push(playerName)
-            playerToSchedWeight[playerName] = 0 /* player initially unscheduled */
             playerToR[playerName] = parseInt(m[2])
             playerToRD[playerName] = parseInt(m[3])
             playerToT[playerName] = parseInt(m[4])
@@ -220,7 +215,7 @@ function bugtrackInit(x) {
         }
     }
 
-    /* populate the scheduler display html */
+    /* populate the scheduler */
     var html = '<table><tr>'
     for(var j in playerNames) {
         if(!(j%3)) {
@@ -229,8 +224,7 @@ function bugtrackInit(x) {
         html += '<td>'
         html += '<input id=schedCheck' + j + ' type=\"checkbox\" value=\"' + playerNames[j] + '"'
         html += ' onclick="schedTogglePlayer(this, \'' + playerNames[j] + '\')" />'
-        html += '<span id=schedProbability' + j + '></span>'
-        html += '<span>' + playerNames[j] + '</span>'
+        html += '<span id=schedDisplay' + j + '>' + playerNames[j] + '</span>'
         html += "</td>"
     }
     html += '</tr></table>'
@@ -239,7 +233,8 @@ function bugtrackInit(x) {
 
     /* populate schedule element list */
     for(var j in playerNames) {
-        playerToSchedProbabilityElem[playerNames[j]] = document.getElementById('schedProbability' + j)
+        schedCheckElems.push(document.getElementById('schedCheck' + j))
+        schedDisplayElems.push(document.getElementById('schedDisplay' + j))
     }
 
     /* populate the ratings */
@@ -548,94 +543,111 @@ function clearTeamB(elem)
 
 function schedCycle()
 {
-    var names = [elem_b1.value, elem_b2.value, elem_a1.value, elem_a2.value]
+    var names = schedGetHead()
 
     if(names) {
-        /* double everybody's weight (players will go to 1) */
-        for(var i in playerNames) {
-            playerToSchedWeight[playerNames[i]] *= 2
-        }
-
-        /* players that just played adopt weight 1 */
         for(var i in names) {
-            playerToSchedWeight[names[i]] = 1
+            schedRemovePlayer(names[i])
+            schedAddPlayer(names[i])
         }
-    
-        schedRecalcProbabilities()
     }
 }
 
-function schedRecalcProbabilities()
+function schedNameToDisplayElem(who)
 {
-    /* calculate total weights (divisor) */
-    var total = 0
-    for(var i in playerNames) {
-        total += playerToSchedWeight[playerNames[i]]
+    var re = new RegExp('.*' + who + '.*')
+    var disp = undefined
+
+    /* resolve display element for this guy */
+    for(var i in schedDisplayElems) {
+        var m = schedDisplayElems[i].innerHTML.match(re)
+        if(m) {
+            disp = schedDisplayElems[i]
+            break
+        }
     }
 
-    /* calculate percentage weight for each player */
-    for(var i in playerNames) {
-        var whom = playerNames[i]
-        var weight = playerToSchedWeight[whom]
-        if(weight && (total>=4)) {
-            //var prob = 1 - Math.pow((total-weight)/total, 4)
-            var prob = weight/total
-            playerToSchedProbabilityElem[whom].innerHTML =
-                '<font size=large color=red>' + Math.round((prob*100)*100)/100 + '% </font>'
-        }
-        else {
-            playerToSchedProbabilityElem[whom].innerHTML = ''
-        } 
+    if(disp == undefined) {
+        alert("couldn't located player " + who + " in scheduler slots")
     }
+
+    return disp
+}
+
+function schedRemovePlayer(who)
+{
+    var disp = schedNameToDisplayElem(who)
+
+    /* get rank */
+    m = disp.innerHTML.match(/(\d+)/)
+    var rank = parseInt(m[1])
+
+    /* remove this guy's number */ 
+    var m = disp.innerHTML.match(/<\/font>(.*)/)
+    disp.innerHTML = m[1]
+
+    /* advance everyone behind him */
+    for(var i in schedDisplayElems) {
+        var m = schedDisplayElems[i].innerHTML.match(/(.*?)(\d+). (.*)/)
+
+        if(m) {
+            if (parseInt(m[2]) > rank) {
+                schedDisplayElems[i].innerHTML = m[1] + (parseInt(m[2])-1) + '. ' + m[3]
+            }
+        }
+    }
+}
+
+function schedAddPlayer(who)
+{
+    var disp = schedNameToDisplayElem(who)
+
+    var max = 0
+
+    /* find end of the queue */
+    for(var i in schedDisplayElems) {
+        var m = schedDisplayElems[i].innerHTML.match(/(.*?)(\d+)(.*)/)
+
+        if(m) {
+            max = Math.max(max, m[2])
+        }
+    }
+
+    disp.innerHTML = '<font size=large color=red>' + (max+1) + 
+        '. </font>' + disp.innerHTML
 }
 
 function schedTogglePlayer(elem, who)
 {
     if(elem.checked == true) {
-        playerToSchedWeight[who] = 1
+        schedAddPlayer(who)   
     }
     else {
-        playerToSchedWeight[who] = 0
+        schedRemovePlayer(who)
     }
-
-    schedRecalcProbabilities()
 }
 
-function schedGetHead(names)
-{
-    /* calculate total weights (divisor) */
-    var spinToWinner = []
-    var spin = 0
-    var total = 0
-    for(var i in playerNames) {
-        var name = playerNames[i]
-        var weight = playerToSchedWeight[name]
+function schedGetHead() {
+    var names = []
 
-        for(var j=0; j<weight; ++j) {
-            spinToWinner[spin++] = name
+    /* find the current 4 */
+    for(var i in schedDisplayElems) {
+        var m = schedDisplayElems[i].innerHTML.match(/^.*?(\d+).(.*)/)
+        if(m) {
+            val = parseInt(m[1])
+            if(val == 1 || val == 2 || val == 3 || val == 4) {
+                m = schedDisplayElems[i].innerHTML.match(/<\/font>(.*)/)
+                names.push(m[1])
+            }
         }
-        
-        total += weight
     }
 
-    if(total < 4) {
-        alert("ERROR: less than 4 players scheduled!")
+    if(names.length != 4) {
+        //alert("ERROR: less than 4 people scheduled!")
         return
     }
-
-    /* random spin across the total */
-    var winners = new Array(0)
-    while(winners.length < 4) {
-        var spin = Math.floor(Math.random() * 1000000) % total
    
-        who = spinToWinner[spin]
-
-        if(winners.indexOf(who) == -1) {
-            winners.push(who)
-        }
-    }
- 
-    return winners
+    return names;
 }
 
 function schedLoadPlayers(names)
@@ -659,9 +671,19 @@ function schedLoadPlayers(names)
     
 function schedLoadPlayersRandom()
 {
-    names = schedGetHead()
+    var names = schedGetHead()
 
     if(names) {
+        /* scramble the names */
+        for(var i=0; i<8; ++i) {
+            j = Math.floor((Math.random()*4))
+            k = Math.floor((Math.random()*4))
+
+            var temp = names[j] 
+            names[j] = names[k]
+            names[k] = temp
+        }
+ 
         schedLoadPlayers(names);
     }
 }
@@ -677,7 +699,7 @@ function schedLoadPlayersFair()
     names = [names[0], names[3], names[1], names[2]]
 
     /* randomly flip black/white */
-    if(Math.random() > .5) {
+    if(Math.floor(Math.random()*2)) {
         names = [names[1], names[0], names[3], names[2]]
     }
 
@@ -712,6 +734,488 @@ function loadLeaderBoard() {
     }
     html += '</center>'
     document.getElementById("LeaderBoard").innerHTML = html
+}
+
+function loadAllRatingsHistoryGraph() {
+    /* prepare the user for delay */
+    document.getElementById("AllRatingsHistoryGraph_status").innerHTML = "loading..."
+
+    /* get to work */
+    var playerList = []
+    var playerToObject = {}
+
+    /* each game offers a sample point */
+    var resp = ajax("cgi/jsIface.py?op=getGames")
+    var lines = resp.split("\n")
+    for(var i in lines) {
+        var data = lines[i].split(",")
+        var t = parseInt(data[0])
+        var a1 = data[1]
+        var a1_r = parseInt(data[2])
+        var a2 = data[4]
+        var a2_r = parseInt(data[5])
+        var b1 = data[7]
+        var b1_r = parseInt(data[8])
+        var b2 = data[10]
+        var b2_r = parseInt(data[11])
+
+        if(isNaN(t)) {
+            continue
+        }
+
+        var players = [a1, a2, b1, b2]
+        var ratings = [a1_r, a2_r, b1_r, b2_r]
+
+        /* update each player's data from the game */
+        for(var j in players) {
+            var p = players[j]
+            var r = ratings[j]
+
+            /* create if not exist yet */
+            if(playerToObject[p] == undefined) {
+                playerList.push(p)
+                playerToObject[p] = { name: p, data: [] }
+            }
+
+            /* append this one rating sample */
+            /* recall that the 'datetime' type of xAxis in highcharts expects milliseconds */
+            playerToObject[p]['data'].push([t*1000, r])
+        }
+    }
+
+    /* finally, push the current ratings as the last sample point for each present player */
+    tNow = (new Date()).getTime()
+    for(var i in playerNames) {
+        p = playerNames[i]
+
+        if(playerToObject[p] == undefined) {
+            continue
+        }
+
+        playerToObject[p]['data'].push([tNow, playerToR[p]])
+    }
+
+    /* build the series as an array of player objects */
+    var seriesData = []
+    for(var i in playerList) {
+        seriesData.push(playerToObject[playerList[i]])
+    }
+
+    /* finally, render the graph into this div */
+    var chart = new Highcharts.Chart(
+        {
+            chart: {
+                renderTo: document.getElementById("AllRatingsHistoryGraph"), 
+                zoomType: 'xy', 
+                type: 'line'
+            },
+            plotOptions: {
+               series: {
+                   marker: {
+                       enabled: false,
+                       states: {
+                           hover: {
+                               enabled: true
+                           }
+                       }
+                   }
+               }
+            },
+            title: {
+                text: 'Player Rating vs. Time'
+            },
+            xAxis: {
+                type: 'datetime',
+                dateTimeLabelFormats: { // don't display the dummy year
+                    month: '%e. %b',
+                    year: '%b'
+                }
+            },
+            yAxis: {
+                title: {
+                    text: 'Rating'
+                },
+                min: 0
+            },
+            tooltip: {
+                formatter: function() {
+                    return '<b>'+ this.series.name +'</b><br/>'+Highcharts.dateFormat('%e. %b', this.x) +': '+ this.y
+                }
+            },
+            series: seriesData
+        }
+    )
+
+    /* erase the "loading..." message */
+    document.getElementById("AllRatingsHistoryGraph_status").innerHTML = ""
+}
+
+function loadAllRatingsVsGamesGraph() {
+    /* prepare the user for delay */
+    document.getElementById("AllRatingsVsGamesGraph_status").innerHTML = "loading..."
+
+    /* get to work */
+    var playerList = []
+    var playerToObject = {}
+
+    var resp = ajax("cgi/jsIface.py?op=getGames")
+    var lines = resp.split("\n")
+    for(var i in lines) {
+        var data = lines[i].split(",")
+        var t = parseInt(data[0])
+        var a1 = data[1]
+        var a1_r = parseInt(data[2])
+        var a2 = data[4]
+        var a2_r = parseInt(data[5])
+        var b1 = data[7]
+        var b1_r = parseInt(data[8])
+        var b2 = data[10]
+        var b2_r = parseInt(data[11])
+
+        if(isNaN(t)) {
+            continue
+        }
+
+        var players = [a1, a2, b1, b2]
+        var ratings = [a1_r, a2_r, b1_r, b2_r]
+
+        /* update each player's data from the game */
+        for(var i in players) {
+            var p = players[i]
+            var r = ratings[i]
+
+            /* create if not exist yet */
+            if(playerToObject[p] == undefined) {
+                playerList.push(p)
+                playerToObject[p] = { name: p, data: [], nGames: 0 }
+            }
+
+            /* append this one rating sample */
+            var nGames = playerToObject[p]['nGames']
+            playerToObject[p]['data'].push([nGames, r])
+            playerToObject[p]['nGames']++
+        }
+    }
+
+    /* build the series as an array of player objects */
+    var seriesData = []
+    for(var i in playerList) {
+        playerToObject[playerList[i]]['nGames'] = undefined
+        seriesData.push(playerToObject[playerList[i]])
+    }
+
+    /* finally, render the graph into this div */
+    var chart = new Highcharts.Chart(
+        {
+            chart: {
+                renderTo: document.getElementById("AllRatingsVsGamesGraph"), 
+                zoomType: 'xy', 
+                type: 'line'
+            },
+            plotOptions: {
+               series: {
+                   marker: {
+                       enabled: false,
+                       states: {
+                           hover: {
+                               enabled: true
+                           }
+                       }
+                   }
+               }
+            },
+            title: {
+                text: 'Player Rating vs. Amount Games Played'
+            },
+            xAxis: {
+                title: {
+                    text: 'n\'th game'
+                },
+                min: 0
+            },
+            yAxis: {
+                title: {
+                    text: 'Rating'
+                },
+                min: 0
+            },
+            tooltip: {
+                formatter: function() {
+                    return '<b>'+ this.series.name +'</b><br/>'+Highcharts.dateFormat('%e. %b', this.x) +': '+ this.y
+                }
+            },
+            series: seriesData
+        }
+    )
+
+    /* erase the "loading..." message */
+    document.getElementById("AllRatingsVsGamesGraph_status").innerHTML = ""
+}
+
+/******************************************************************************
+ * INDIVIDUAL STATS MODE stuff
+ *****************************************************************************/
+function istatsPlayerChoice_cb(elem) {
+    if(elem.value != "") {
+        loadIStatsExtended(elem.value)
+        loadResultsVsPartnersGraph(elem.value)
+        loadResultsVsOpponentsGraph(elem.value)
+    }
+}
+
+function loadIStatsExtended(who) {
+    document.getElementById("IStatsExtended").innerHTML = "loading..."
+
+    var html = ''
+    html += '<table>'
+    var resp = ajax("cgi/jsIface.py?op=getstatsextended&player=" + who)
+    var lines = resp.split("\n")
+
+    for(var i in lines) {
+        if(!lines[i]) {
+            continue
+        }
+
+        nameData = lines[i].split(",")
+        html += "<tr><td align=right><font color=#64788B>" + nameData[0] + ":</font></td><td>" + nameData[1] + "</td></tr>\n"
+    }
+    html += '</center>'
+    document.getElementById("IStatsExtended").innerHTML = html
+
+}
+
+function loadResultsVsPartnersGraph(who) {
+    /* prepare the user for delay */
+    document.getElementById("ResultsVsPartnersGraph_status").innerHTML = "loading..."
+
+    /* get to work */
+
+    var partnerList = []
+    var partnerToObj = {}
+
+    var resp = ajax("cgi/jsIface.py?op=getGames")
+    var lines = resp.split("\n")
+    for(var i in lines) {
+        var data = lines[i].split(",")
+        var t = parseInt(data[0])
+        var a1 = data[1]
+        var a1_r = parseInt(data[2])
+        var a2 = data[4]
+        var a2_r = parseInt(data[5])
+        var b1 = data[7]
+        var b1_r = parseInt(data[8])
+        var b2 = data[10]
+        var b2_r = parseInt(data[11])
+        var partner
+        var result
+
+        if(isNaN(t)) {
+            continue
+        }
+
+        /* can find partner? */
+        if(a1 == who) {
+            partner = a2
+            result = 1
+        }
+        else if(a2 == who) {
+            partner = a1
+            result = 1
+        }
+        else if(b1 == who) {
+            partner = b2
+            result = 0
+        }
+        else if(b2 == who) {
+            partner = b1
+            result = 0
+        }
+        else {
+            continue
+        }
+
+        /* create entry if not exist */
+        if(partnerToObj[partner] == undefined) {
+            partnerList.push(partner)
+            partnerToObj[partner] = { name: "Partner: " + partner, data: [0,0] }
+        }
+
+        if(result == 1) {
+            partnerToObj[partner].data[0]++
+        }
+        else {
+            partnerToObj[partner].data[1]++
+        }
+    }
+
+    /* build the series as an array of player objects */
+    var seriesData = [{name: 'Wins', data:[]}, {name: 'Losses', data:[]}]
+    for(var i in partnerList) {
+        seriesData[0].data.push(partnerToObj[partnerList[i]].data[0])
+        seriesData[1].data.push(partnerToObj[partnerList[i]].data[1])
+    }
+
+    /* finally, render the graph into this div */
+    var chart = new Highcharts.Chart(
+        {
+            chart: {
+                renderTo: document.getElementById("ResultsVsPartnersGraph"), 
+                type: 'bar'
+            },
+            plotOptions: {
+               series: {
+                   marker: {
+                       enabled: false,
+                       states: {
+                           hover: {
+                               enabled: true
+                           }
+                       }
+                   }
+               }
+            },
+            title: {
+                text: 'Player Result vs. Partners'
+            },
+            xAxis: {
+                categories: partnerList,
+                title: {
+                    text: null
+                }
+            },
+            yAxis: {
+                title: {
+                    text: 'Wins/Losses',
+                    align: 'high'
+                },
+                min: 0
+            },
+            series: seriesData
+        }
+    )
+
+    /* erase the "loading..." message */
+    document.getElementById("ResultsVsPartnersGraph_status").innerHTML = ""
+}
+
+function loadResultsVsOpponentsGraph(who) {
+    /* prepare the user for delay */
+    document.getElementById("ResultsVsOpponentsGraph_status").innerHTML = "loading..."
+
+    /* get to work */
+
+    var oppList = []
+    var oppToObj = {}
+
+    var resp = ajax("cgi/jsIface.py?op=getGames")
+    var lines = resp.split("\n")
+    for(var i in lines) {
+        var data = lines[i].split(",")
+        var t = parseInt(data[0])
+        var a1 = data[1]
+        var a1_r = parseInt(data[2])
+        var a2 = data[4]
+        var a2_r = parseInt(data[5])
+        var b1 = data[7]
+        var b1_r = parseInt(data[8])
+        var b2 = data[10]
+        var b2_r = parseInt(data[11])
+        var opponents = []
+        var result
+
+        if(isNaN(t)) {
+            continue
+        }
+
+        /* can find opponent? */
+        if(a1 == who) {
+            opponents.push(b1)
+            opponents.push(b2)
+            result = 1
+        }
+        else if(a2 == who) {
+            opponents.push(b1)
+            opponents.push(b2)
+            result = 1
+        }
+        else if(b1 == who) {
+            opponents.push(a1)
+            opponents.push(a2)
+            result = 0
+        }
+        else if(b2 == who) {
+            opponents.push(a1)
+            opponents.push(a2)
+            result = 0
+        }
+        else {
+            continue
+        }
+
+        /* create entry if not exist */
+        for(var i in opponents) {
+            if(oppToObj[opponents[i]] == undefined) {
+                oppList.push(opponents[i])
+                oppToObj[opponents[i]] = { name: "Opponent: " + opponents[i], data: [0,0] }
+            }
+    
+            if(result == 1) {
+                oppToObj[opponents[i]].data[0]++
+            }
+            else {
+                oppToObj[opponents[i]].data[1]++
+            }
+        }
+    }
+
+    /* build the series as an array of player objects */
+    var seriesData = [{name: 'Wins', data:[]}, {name: 'Losses', data:[]}]
+    for(var i in oppList) {
+        seriesData[0].data.push(oppToObj[oppList[i]].data[0])
+        seriesData[1].data.push(oppToObj[oppList[i]].data[1])
+    }
+
+    /* finally, render the graph into this div */
+    var chart = new Highcharts.Chart(
+        {
+            chart: {
+                renderTo: document.getElementById("ResultsVsOpponentsGraph"), 
+                type: 'bar'
+            },
+            plotOptions: {
+               series: {
+                   marker: {
+                       enabled: false,
+                       states: {
+                           hover: {
+                               enabled: true
+                           }
+                       }
+                   }
+               }
+            },
+            title: {
+                text: 'Player Result vs. Opponents (either color)'
+            },
+            xAxis: {
+                categories: oppList,
+                title: {
+                    text: null
+                }
+            },
+            yAxis: {
+                title: {
+                    text: 'Wins/Losses',
+                    align: 'high'
+                },
+                min: 0
+            },
+            series: seriesData
+        }
+    )
+
+    /* erase the "loading..." message */
+    document.getElementById("ResultsVsOpponentsGraph_status").innerHTML = ""
 }
 
 /******************************************************************************
