@@ -5,10 +5,12 @@
    </title>
    <link rel=StyleSheet href="stylesheet.css" type="text/css">
    <script type="text/javascript" src="./bugtrack.js"></script>
+   <script type="text/javascript" src="./glicko.js"></script>
+   <script type="text/javascript" src="./play.js"></script>
  </head>
 
 
-<body onload="bugtrackInit()">
+<body onload="playInit()">
 <body style="margin:0px">
 
 <!-- MODE SELECTION -->
@@ -17,7 +19,10 @@
  <input type=submit class="menu" onclick="showPlay()" value="Play" />
  <input type=submit class="menu" onclick="showScheduler()" value="Scheduler" />
  <input type=submit class="menu" onclick="showGamesList()" value="Games History" />
+ <!--
  <input type=submit class="menu" onclick="showAdmin()" value="Admin" />
+ -->
+ <input type=submit class="menu" onclick="window.open('stats.html', '_newtab')" value="Stats" />
 </div>
 
 <!-- MODE: PLAY -->
@@ -99,9 +104,12 @@
 </div>
 
 <!-- MODE: ADMIN (add user / etc.) -->
+
+<!--
 <div id="admin">
  <h3>Admin Page! (add new user, etc.)</h3>
 </div>
+-->
 
 </body>
 </html>
