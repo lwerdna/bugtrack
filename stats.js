@@ -73,19 +73,8 @@ function statsInit(x) {
     showStats()
 }
 
-function hideAllBut(e) {
-    for(var i in showElems) {
-        if(showElems[i] == e) {
-            showElems[i].style.display = 'block'
-        }
-        else {
-            showElems[i].style.display = 'none'
-        }
-    }
-}
-
 function showStats() {
-    hideAllBut(document.getElementById('stats'))
+    hideAllBut(document.getElementById('stats'), showElems)
 
     // each graph has a function dedicated to loading it...
     loadLeaderBoard()
@@ -94,7 +83,7 @@ function showStats() {
 }
 
 function showIStats() {
-    hideAllBut(document.getElementById('istats'))
+    hideAllBut(document.getElementById('istats'), showElems)
 
     // graphs don't load until user makes player selection 
 }
@@ -143,21 +132,21 @@ function loadAllRatingsHistoryGraph() {
     for(var i in lines) {
         var data = lines[i].split(",")
         var t = parseInt(data[0])
-        var a1 = data[1]
-        var a1_r = parseInt(data[2])
-        var a2 = data[4]
-        var a2_r = parseInt(data[5])
-        var b1 = data[7]
-        var b1_r = parseInt(data[8])
-        var b2 = data[10]
-        var b2_r = parseInt(data[11])
+        var A = data[1]
+        var A_r = parseInt(data[2])
+        var b = data[4]
+        var b_r = parseInt(data[5])
+        var a = data[7]
+        var a_r = parseInt(data[8])
+        var B = data[10]
+        var B_r = parseInt(data[11])
 
         if(isNaN(t)) {
             continue
         }
 
-        var players = [a1, a2, b1, b2]
-        var ratings = [a1_r, a2_r, b1_r, b2_r]
+        var players = [A, b, a, B]
+        var ratings = [A_r, b_r, a_r, B_r]
 
         /* update each player's data from the game */
         for(var j in players) {
@@ -256,21 +245,21 @@ function loadAllRatingsVsGamesGraph() {
     for(var i in lines) {
         var data = lines[i].split(",")
         var t = parseInt(data[0])
-        var a1 = data[1]
-        var a1_r = parseInt(data[2])
-        var a2 = data[4]
-        var a2_r = parseInt(data[5])
-        var b1 = data[7]
-        var b1_r = parseInt(data[8])
-        var b2 = data[10]
-        var b2_r = parseInt(data[11])
+        var A = data[1]
+        var A_r = parseInt(data[2])
+        var b = data[4]
+        var b_r = parseInt(data[5])
+        var a = data[7]
+        var a_r = parseInt(data[8])
+        var B = data[10]
+        var B_r = parseInt(data[11])
 
         if(isNaN(t)) {
             continue
         }
 
-        var players = [a1, a2, b1, b2]
-        var ratings = [a1_r, a2_r, b1_r, b2_r]
+        var players = [A, b, a, B]
+        var ratings = [A_r, b_r, a_r, B_r]
 
         /* update each player's data from the game */
         for(var i in players) {
@@ -391,14 +380,14 @@ function loadResultsVsPartnersGraph(who) {
     for(var i in lines) {
         var data = lines[i].split(",")
         var t = parseInt(data[0])
-        var a1 = data[1]
-        var a1_r = parseInt(data[2])
-        var a2 = data[4]
-        var a2_r = parseInt(data[5])
-        var b1 = data[7]
-        var b1_r = parseInt(data[8])
-        var b2 = data[10]
-        var b2_r = parseInt(data[11])
+        var A = data[1]
+        var A_r = parseInt(data[2])
+        var b = data[4]
+        var b_r = parseInt(data[5])
+        var a = data[7]
+        var a_r = parseInt(data[8])
+        var B = data[10]
+        var B_r = parseInt(data[11])
         var partner
         var result
 
@@ -407,20 +396,20 @@ function loadResultsVsPartnersGraph(who) {
         }
 
         /* can find partner? */
-        if(a1 == who) {
-            partner = a2
+        if(A == who) {
+            partner = b
             result = 1
         }
-        else if(a2 == who) {
-            partner = a1
+        else if(b == who) {
+            partner = A
             result = 1
         }
-        else if(b1 == who) {
-            partner = b2
+        else if(a == who) {
+            partner = B
             result = 0
         }
-        else if(b2 == who) {
-            partner = b1
+        else if(B == who) {
+            partner = a
             result = 0
         }
         else {
@@ -505,14 +494,14 @@ function loadResultsVsOpponentsGraph(who) {
     for(var i in lines) {
         var data = lines[i].split(",")
         var t = parseInt(data[0])
-        var a1 = data[1]
-        var a1_r = parseInt(data[2])
-        var a2 = data[4]
-        var a2_r = parseInt(data[5])
-        var b1 = data[7]
-        var b1_r = parseInt(data[8])
-        var b2 = data[10]
-        var b2_r = parseInt(data[11])
+        var A = data[1]
+        var A_r = parseInt(data[2])
+        var b = data[4]
+        var b_r = parseInt(data[5])
+        var a = data[7]
+        var a_r = parseInt(data[8])
+        var B = data[10]
+        var B_r = parseInt(data[11])
         var opponents = []
         var result
 
@@ -521,24 +510,24 @@ function loadResultsVsOpponentsGraph(who) {
         }
 
         /* can find opponent? */
-        if(a1 == who) {
-            opponents.push(b1)
-            opponents.push(b2)
+        if(A == who) {
+            opponents.push(a)
+            opponents.push(B)
             result = 1
         }
-        else if(a2 == who) {
-            opponents.push(b1)
-            opponents.push(b2)
+        else if(b == who) {
+            opponents.push(a)
+            opponents.push(B)
             result = 1
         }
-        else if(b1 == who) {
-            opponents.push(a1)
-            opponents.push(a2)
+        else if(a == who) {
+            opponents.push(A)
+            opponents.push(b)
             result = 0
         }
-        else if(b2 == who) {
-            opponents.push(a1)
-            opponents.push(a2)
+        else if(B == who) {
+            opponents.push(A)
+            opponents.push(b)
             result = 0
         }
         else {

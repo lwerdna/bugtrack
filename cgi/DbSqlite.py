@@ -39,19 +39,19 @@ class DbSqlite():
     # database maintenance
     #--------------------------------------------------------------------------
     SCHEMA_GAMES = [
-            ['time',            'REAL PRIMARY KEY'],  # Timestamp in epoch seconds
-            ['teamAwhite',      'TEXT'],     # Winner - White player
-            ['teamAwhiteRating','INTEGER'],  # Winner - White player rating
-            ['teamAwhiteRD',    'INTEGER'],  # Winner - White player RD
-            ['teamAblack',      'TEXT'],     # Winner - Black player
-            ['teamAblackRating','INTEGER'],  # Winner - Black player rating
-            ['teamAblackRD',    'INTEGER'],  # Winner - Black player RD
-            ['teamBwhite',      'TEXT'],     # Loser  - White player
-            ['teamBwhiteRating','INTEGER'],  # Loser  - White player rating
-            ['teamBwhiteRD',    'INTEGER'],  # Loser  - White player RD
-            ['teamBblack',      'TEXT'],     # Loser  - Black player
-            ['teamBblackRating','INTEGER'],  # Loser  - Black player rating
-            ['teamBblackRD',    'INTEGER']]  # Loser  - Black player RD
+            ['time',   'REAL PRIMARY KEY'], # Timestamp in epoch seconds
+            ['WhiteA',      'TEXT'],     # Winner - White player
+            ['WhiteA_r',    'INTEGER'],  # Winner - White player rating
+            ['WhiteA_rd',   'INTEGER'],  # Winner - White player RD
+            ['BlackB',      'TEXT'],     # Winner - Black player
+            ['BlackB_r',    'INTEGER'],  # Winner - Black player rating
+            ['BlackB_rd',   'INTEGER'],  # Winner - Black player RD
+            ['WhiteB',      'TEXT'],     # Loser  - White player
+            ['WhiteB_r',    'INTEGER'],  # Loser  - White player rating
+            ['WhiteB_rd',   'INTEGER'],  # Loser  - White player RD
+            ['BlackA',      'TEXT'],     # Loser  - Black player
+            ['BlackA_r',    'INTEGER'],  # Loser  - Black player rating
+            ['BlackA_rd',   'INTEGER']]  # Loser  - Black player RD
     SCHEMA_ACHIEVEMENTS = [
             ['id',    'INTEGER PRIMARY KEY'],
             ['name',  'TEXT'],     # Player Name
@@ -149,32 +149,24 @@ class DbSqlite():
     # game stats
     #--------------------------------------------------------------------------
 
-    # returns a row from the database - currently we define row as:
-    # [date, teamAwhitePlayer, teamAwhitePlayerRating,
-    #        teamAblackPlayer, teamAblackPlayerRating,
-    #        teamBwhitePlayer, teamBwhitePlayerRating,
-    #        teamBblackPlayer, teamBblackPlayerRating]
-    #
-    # where, by convention, teamA are the winners, teamB are the losers
-    #
-    # (change this comment if the db schema changes please)
+    # see README for explanation of the ordering of these columns
     def getGames(self, since=0):
         self.c.execute('SELECT * from games WHERE time>(?) order by time', (since,))
 
         games = []
         for x in self.c.fetchall():
             games.append({'t':x[0], \
-                          'a1':str(x[1]), 'a1_r':x[2], 'a1_rd':x[3], \
-                          'a2':str(x[4]), 'a2_r':x[5], 'a2_rd':x[6], \
-                          'b2':str(x[7]), 'b2_r':x[8], 'b2_rd':x[9], \
-                          'b1':str(x[10]),'b1_r':x[11],'b1_rd':x[12]})
+                          'A':str(x[1]), 'A_r':x[2], 'A_rd':x[3], \
+                          'b':str(x[4]), 'b_r':x[5], 'b_rd':x[6], \
+                          'B':str(x[7]), 'B_r':x[8], 'B_rd':x[9], \
+                          'a':str(x[10]),'a_r':x[11],'a_rd':x[12]})
 
         return games
 
     # retrieve all games that had player involved in it
     def getGamesByPlayer(self, name, since=0):
         self.c.execute('SELECT * from games WHERE' +
-            ' teamAwhite=? or teamAblack=? or teamBwhite=? or teamBblack=?' +
+            ' A=? or b=? or B=? or a=?' +
             ' and time>(?)' +
             ' ORDER by time',
             (name, name, name, name, since)
@@ -183,10 +175,10 @@ class DbSqlite():
         games = []
         for x in self.c.fetchall():
             games.append({'t':x[0], \
-                          'a1':str(x[1]), 'a1_r':x[2], 'a1_rd':x[3], \
-                          'a2':str(x[4]), 'a2_r':x[5], 'a2_rd':x[6], \
-                          'b2':str(x[7]), 'b2_r':x[8], 'b2_rd':x[9], \
-                          'b1':str(x[10]),'b1_r':x[11],'b1_rd':x[12]})
+                          'A':str(x[1]), 'A_r':x[2], 'A_rd':x[3], \
+                          'b':str(x[4]), 'b_r':x[5], 'b_rd':x[6], \
+                          'B':str(x[7]), 'B_r':x[8], 'B_rd':x[9], \
+                          'a':str(x[10]),'a_r':x[11],'a_rd':x[12]})
         return games
 
     def deleteGame(self, t):
@@ -202,10 +194,10 @@ class DbSqlite():
     def recordGame(self, data):
         self.c.execute('INSERT OR REPLACE into games values(?,?,?,?,?,?,?,?,?,?,?,?,?)',
                 (data['t'], 
-                data['a1'], data['a1_r'], data['a1_rd'], 
-                data['a2'], data['a2_r'], data['a2_rd'], 
-                data['b2'], data['b2_r'], data['b2_rd'], 
-                data['b1'], data['b1_r'], data['b1_rd'])
+                data['A'], data['A_r'], data['A_rd'], 
+                data['b'], data['b_r'], data['b_rd'], 
+                data['B'], data['B_r'], data['B_rd'], 
+                data['a'], data['a_r'], data['a_rd'])
             )
         self.conn.commit()
 
@@ -223,29 +215,29 @@ class DbSqlite():
 
         # Streak
         streak = 0
-        self.c.execute("select max(time) from games where (teamAblack==?" +
-            " or teamAwhite==?)", (who, who))
+        self.c.execute("select max(time) from games where (BlackB==?" +
+            " or WhiteA==?)", (who, who))
         lastWin = self.c.fetchone()[0]
-        self.c.execute("select max(time) from games where (teamBblack==?" +
-            " or teamBwhite==?)", (who, who))
+        self.c.execute("select max(time) from games where (BlackA==?" +
+            " or B==?)", (who, who))
         lastLoss = self.c.fetchone()[0]
         if (lastWin > lastLoss):
-            self.c.execute("select count(time) from games where ((teamAblack==?" +
-                " or teamAwhite==?) and (time>?))", (who, who,lastLoss))
+            self.c.execute("select count(time) from games where ((BlackB==?" +
+                " or WhiteA==?) and (time>?))", (who, who,lastLoss))
             streak = self.c.fetchone()[0]
         else:
-            self.c.execute("select count(time) from games where ((teamBblack==?" +
-                " or teamBwhite==?) and (time>?))", (who, who,lastWin))
+            self.c.execute("select count(time) from games where ((BlackA==?" +
+                " or B==?) and (time>?))", (who, who,lastWin))
             streak = self.c.fetchone()[0]
 
         # Wins
-        self.c.execute("select count(time) from games where (teamAblack==?" +
-            " or teamAwhite==?)", (who, who))
+        self.c.execute("select count(time) from games where (BlackB==?" +
+            " or WhiteA==?)", (who, who))
         numWins = self.c.fetchone()[0]
 
         # Losses
-        self.c.execute("select count(time) from games where (teamBblack==?" +
-            " or teamBwhite==?)", (who, who))
+        self.c.execute("select count(time) from games where (BlackA==?" +
+            " or B==?)", (who, who))
         numLosses = self.c.fetchone()[0]
 
         # Create the response
@@ -258,25 +250,30 @@ class DbSqlite():
         self.c.execute("select count(time) from games");
         numGamesFromAll = self.c.fetchone()[0]
 
-        self.c.execute("select count(time) from games where (teamAblack==?" +
-            " or teamAwhite==? or teamBwhite==? or teamBblack==?)", (who, who,
-            who, who))
+        self.c.execute( \
+            "select count(time) from games where " + 
+            "(BlackB==? or WhiteA==? or WhiteB==? or BlackA==?)", 
+            (who, who, who, who))
         numGames = self.c.fetchone()[0]
 
-        self.c.execute("select count(time) from games where (teamAblack==?" +
-            " or teamAwhite==?)", (who, who))
+        self.c.execute( \
+            "select count(time) from games where " + 
+            "(BlackB==? or WhiteA==?)", (who, who))
         numWins = self.c.fetchone()[0]
 
-        self.c.execute("select count(time) from games where (teamBblack==?" +
-            " or teamBwhite==?)", (who, who))
+        self.c.execute( \
+            "select count(time) from games where " + 
+            "(BlackA==? or WhiteB==?)", (who, who))
         numLosses = self.c.fetchone()[0]
 
-        self.c.execute("select count(time) from games where (teamAwhite==?" +
-            " or teamBwhite==?)", (who, who))
+        self.c.execute( \
+            "select count(time) from games where " + 
+            "(WhiteA==? or WhiteB==?)", (who, who))
         numWhite = self.c.fetchone()[0]
 
-        self.c.execute("select count(time) from games where (teamAblack==?" +
-            " or teamBblack==?)", (who, who))
+        self.c.execute( \
+            "select count(time) from games where (BlackB==?" +
+            " or BlackA==?)", (who, who))
         numBlack = self.c.fetchone()[0]
 
         #
@@ -291,41 +288,50 @@ class DbSqlite():
 
         for p in players:
             # partner stuff
-            self.c.execute("select count(time) from games where " +
-                "(teamAwhite==? and teamAblack==?) or (teamAwhite==?" +
-                " and teamAblack==?) or (teamBwhite==? and teamBblack==?)" +
-                " or (teamBwhite==? and teamBblack==?)", 
+            self.c.execute( \
+                "select count(time) from games where " +
+                "(WhiteA==? and BlackB==?) or " + 
+                "(WhiteA==? and BlackB==?) or " + 
+                "(WhiteB==? and BlackA==?) or " + 
+                "(WhiteB==? and BlackA==?)", 
                 (who, p, p, who, who, p, p, who))
             partnerToGames[p] = self.c.fetchone()[0]
 
-            self.c.execute("select count(time) from games where " +
-                "(teamAwhite==? and teamAblack==?) or (teamAwhite==?" +
-                " and teamAblack==?)", (who, p, p, who))
+            self.c.execute( \
+                "select count(time) from games where " +
+                "(WhiteA==? and BlackB==?) or " +
+                "(WhiteA==? and BlackB==?)", 
+                (who, p, p, who))
             partnerToWins[p] = self.c.fetchone()[0]
 
-            self.c.execute("select count(time) from games where " +
-                "(teamBwhite==? and teamBblack==?) or (teamBwhite==?" +
-                " and teamBblack==?)", (who, p, p, who))
+            self.c.execute( \
+                "select count(time) from games where " +
+                "(WhiteB==? and BlackA==?) or "
+                "(WhiteB==? and BlackA==?)", 
+                (who, p, p, who))
             partnerToLosses[p] = self.c.fetchone()[0]
 
             # opponent stuff
-            self.c.execute("select count(time) from games where " +
-                "((teamAwhite==? or teamAblack==?) and "
-                " (teamBwhite==? or teamBblack==?)) or "
-                "((teamAwhite==? or teamAblack==?) and "
-                " (teamBwhite==? or teamBblack==?))", 
+            self.c.execute( \
+                "select count(time) from games where " +
+                "((WhiteA==? or BlackB==?) and "
+                " (WhiteB==? or BlackA==?)) or "
+                "((WhiteA==? or BlackB==?) and "
+                " (WhiteB==? or BlackA==?))", 
                 (who, who, p, p, p, p, who, who))
             oppToGames[p] = self.c.fetchone()[0]
 
-            self.c.execute("select count(time) from games where " +
-                "(teamAwhite==? or teamAblack==?) and "
-                "(teamBwhite==? or teamBblack==?)",
+            self.c.execute( \
+                "select count(time) from games where " +
+                "(WhiteA==? or BlackB==?) and "
+                "(WhiteB==? or BlackA==?)",
                 (who, who, p, p))
             oppToWins[p] = self.c.fetchone()[0]
 
-            self.c.execute("select count(time) from games where " +
-                "(teamAwhite==? or teamAblack==?) and "
-                "(teamBwhite==? or teamBblack==?)",
+            self.c.execute( \
+                "select count(time) from games where " +
+                "(WhiteA==? or BlackB==?) and "
+                "(WhiteB==? or BlackA==?)",
                 (p, p, who, who))
             oppToLosses[p] = self.c.fetchone()[0]
        

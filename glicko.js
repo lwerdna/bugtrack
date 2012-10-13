@@ -1,7 +1,25 @@
+/*
 
-/******************************************************************************
- * Glicko 
- *****************************************************************************/
+bugtrack glicko javascript
+Copyright 2012 Andrew Lamoureux
+
+This file is a part of bugtrack
+
+bugtrack is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+*/
+
 // Glicko says this works best when rating period has player playing "moderate" 5-10 games
 // rating period: 1 day
 // time for decay to noob: 365 rating periods
@@ -105,7 +123,7 @@ function calcRatingRdDeltaPlayer(ratings, rds, t, w) {
     return [ratingData[0] - ratings[0], ratingData[1] - rds[0]]
 }
 
-// if a1 (with partner a2, opponents b1,b2) plays, return his <+win>,<-loss> adjustment
+// if A (with partner b, opponents B,a) plays, return his <+win>,<-loss> adjustment
 // returns [winDelta, loseDelta]
 function calcRatingWinLossDeltaPlayer(ratings, rds, ts) {
     tNow = Math.round((new Date()).getTime() / 1000)
@@ -115,35 +133,35 @@ function calcRatingWinLossDeltaPlayer(ratings, rds, ts) {
     return [winRandRD[0], loseRandRD[0]]
 }
 
-// suppose a game is played with winners a1,a2 and losers a3,a4
-// given [a1,a2,a3,a4], return the new ratings/rd's in this form:
-// [[a1_RATING, a1_RD], [a2_RATING, a2_RD], [b1_RATING, b1_RD], [b2_RATING, b2_RD]]
+// suppose a game is played with winners A,b and losers B,a
+// given [A,b,B,a], return the new ratings/rd's in this form:
+// [[A_RATING, A_RD], [b_RATING, b_RD], [B_RATING, B_RD], [a_RATING, a_RD]]
 //
 function calcGameScores(ratings, rds, tds) {
     // calculate new scores
 
-    // calculate for a1 (first winner, white)
+    // calculate for A (winner, white)
     stats1 = calcRatingRdPlayer(ratings, rds, tds[0], 1)
-    debug("a1 new stats: " + stats1)
+    debug("A new stats: " + stats1)
 
-    // calculate for a2 (first winner, black)
+    // calculate for b (winner, black)
     ratings = [ratings[1], ratings[0], ratings[2], ratings[3]]
     rds = [rds[1], rds[0], rds[2], rds[3]]
     debug("calcRatingRdPlayer(" + ratings + ", " + rds + ", " + tds[1] + ", 1);")
     stats2 = calcRatingRdPlayer(ratings, rds, tds[1], 1)
-    debug("a2 new stats: " + stats2)
+    debug("b new stats: " + stats2)
 
-    // calculate for b1 (first loser, black)
+    // calculate for B (loser, white)
     ratings = [ratings[2], ratings[3], ratings[0], ratings[1]]
     rds = [rds[2], rds[3], rds[0], rds[1]]
     stats3 = calcRatingRdPlayer(ratings, rds, tds[2], 0)
-    debug("b1 new stats: " + stats3)
+    debug("B new stats: " + stats3)
 
-    // calculate for b2 (first loser, white)
+    // calculate for a (loser, black)
     ratings = [ratings[1], ratings[0], ratings[2], ratings[3]]
     rds = [rds[1], rds[0], rds[2], rds[3]]
     stats4 = calcRatingRdPlayer(ratings, rds, tds[3], 0)
-    debug("b2 new stats: " + stats4)
+    debug("a new stats: " + stats4)
 
     return [stats1, stats2, stats3, stats4]
 }
