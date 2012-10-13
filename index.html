@@ -22,7 +22,11 @@
  <!--
  <input type=submit class="menu" onclick="showAdmin()" value="Admin" />
  -->
- <input type=submit class="menu" onclick="window.open('stats.html', '_newtab')" value="Stats" />
+ <input type=submit class="menu" onclick="window.open('stats.html', '_newtab' + Math.floor(Math.random()*999999999))" value="Stats" />
+ <!--
+ <input type=submit class="menu" onclick="window.open('stats.html', 'window_bugtrack_stats')" value="Stats" />
+ -->
+
 </div>
 
 <!-- MODE: PLAY -->

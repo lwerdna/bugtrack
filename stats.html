@@ -19,7 +19,12 @@
  BugTrack: 
  <input type=submit class="menu" onclick="showStats()" value="Overall Stats" />
  <input type=submit class="menu" onclick="showIStats()" value="Individual Stats" />
- <input type=submit class="menu" onclick="window.open('index.html', '_newtab')" value="Play" />
+ 
+ <!--
+ <input type=submit class="menu" onclick="window.open('index.html', 'window_bugtrack_play')" value="Play" />
+ -->
+ <input type=submit class="menu" onclick="window.open('index.html', '_newtab' + Math.floor(Math.random()*999999999))" value="Play" />
+
 </div>
 
 <!-- MODE: OVERALL STATS -->

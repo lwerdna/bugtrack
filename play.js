@@ -46,6 +46,8 @@ var playerToT = []
 
 /* called when the page loads */
 function playInit(x) {
+    this.name = 'window_bugtrack_play'
+
     /* overall modes; play is the default */
     showElems.push(document.getElementById("play"))
     showElems.push(document.getElementById("scheduler"))

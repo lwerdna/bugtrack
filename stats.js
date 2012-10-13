@@ -41,6 +41,8 @@ var playerToT = []
 
 /* called when the page loads */
 function statsInit(x) {
+    this.name = 'window_bugtrack_stats'
+
     /* init global player vars */
     var resp = ajax('cgi/jsIface.py?op=getplayers')
     var lines = resp.split("\n")
