@@ -147,7 +147,6 @@ function calcGameScores(ratings, rds, tds) {
     // calculate for b (winner, black)
     ratings = [ratings[1], ratings[0], ratings[2], ratings[3]]
     rds = [rds[1], rds[0], rds[2], rds[3]]
-    debug("calcRatingRdPlayer(" + ratings + ", " + rds + ", " + tds[1] + ", 1);")
     stats2 = calcRatingRdPlayer(ratings, rds, tds[1], 1)
     debug("b new stats: " + stats2)
 
