@@ -33,6 +33,9 @@ var elem_Astats, elem_bstats, elem_Bstats, elem_astats
 var elem_Apredict, elem_bpredict, elem_Bpredict, elem_apredict
 var lastRecord_A, lastRecord_b, lastRecord_B, lastRecord_a
 
+var playerToSchedWeight = []
+var playerToSchedProbabilityElem = []
+
 var playerElems = []
 var playerNames = []
 var playerToR = []
@@ -85,6 +88,7 @@ function playInit(x) {
         if(m) {
             playerName = m[1]
             playerNames.push(playerName)
+            playerToSchedWeight[playerName] = 0 /* player initially unscheduled */
             playerToR[playerName] = parseInt(m[2])
             playerToRD[playerName] = parseInt(m[3])
             playerToT[playerName] = parseInt(m[4])
@@ -104,7 +108,7 @@ function playInit(x) {
         }
     }
 
-    /* populate the scheduler */
+    /* populate the scheduler display html */
     var html = '<table><tr>'
     for(var j in playerNames) {
         if(!(j%3)) {
@@ -113,7 +117,8 @@ function playInit(x) {
         html += '<td>'
         html += '<input id=schedCheck' + j + ' type=\"checkbox\" value=\"' + playerNames[j] + '"'
         html += ' onclick="schedTogglePlayer(this, \'' + playerNames[j] + '\')" />'
-        html += '<span id=schedDisplay' + j + '>' + playerNames[j] + '</span>'
+        html += '<span id=schedProbability' + j + '></span>'
+        html += '<span>' + playerNames[j] + '</span>'
         html += "</td>"
     }
     html += '</tr></table>'
@@ -122,8 +127,7 @@ function playInit(x) {
 
     /* populate schedule element list */
     for(var j in playerNames) {
-        schedCheckElems.push(document.getElementById('schedCheck' + j))
-        schedDisplayElems.push(document.getElementById('schedDisplay' + j))
+        playerToSchedProbabilityElem[playerNames[j]] = document.getElementById('schedProbability' + j)
     }
 
     /* populate the ratings */
@@ -202,25 +206,25 @@ function playShowPredictions() {
         elem_Apredict.innerHTML = "<font color=green>+" + delta[0] + "</font> " + 
                                     "<font color=red>" + delta[1] + "</font>"
         /* if b wins */
-        ratings = repositionColor(ratings)
-        rds = repositionColor(rds)
-        ts = repositionColor(ts)
-        delta = calcRatingWinLossDeltaPlayer(ratings, rds, ts)
+        var ratings_ = repositionColor(ratings)
+        var rds_ = repositionColor(rds)
+        var ts_ = repositionColor(ts)
+        delta = calcRatingWinLossDeltaPlayer(ratings_, rds_, ts_)
         elem_bpredict.innerHTML = "<font color=green>+" + delta[0] + "</font> " + 
                                     "<font color=red>" + delta[1] + "</font>"
 
         /* if B wins */
-        ratings = repositionTable(ratings)
-        rds = repositionTable(rds)
-        ts = repositionTable(ts)
-        delta = calcRatingWinLossDeltaPlayer(ratings, rds, ts)
+        ratings_ = repositionTable(ratings)
+        rds_ = repositionTable(rds)
+        ts_ = repositionTable(ts)
+        delta = calcRatingWinLossDeltaPlayer(ratings_, rds_, ts_)
         elem_Bpredict.innerHTML = "<font color=green>+" + delta[0] + "</font> " + 
                                     "<font color=red>" + delta[1] + "</font>"
         /* if a wins */
-        ratings = repositionColor(ratings)
-        rds = repositionColor(rds)
-        ts = repositionColor(ts)
-        delta = calcRatingWinLossDeltaPlayer(ratings, rds, ts)
+        ratings_ = repositionColor(ratings_)
+        rds_ = repositionColor(rds_)
+        ts_ = repositionColor(ts_)
+        delta = calcRatingWinLossDeltaPlayer(ratings_, rds_, ts_)
         elem_apredict.innerHTML = "<font color=green>+" + delta[0] + "</font> " + 
                                     "<font color=red>" + delta[1] + "</font>"
 
@@ -380,120 +384,101 @@ function cleartop(elem)
 /******************************************************************************
  * SCHEDULER STUFF
  *****************************************************************************/
-
 function schedCycle()
 {
-    var names = schedGetHead()
+    var names = [elem_A.value, elem_b.value, elem_B.value, elem_a.value]
 
     if(names) {
+        /* triple everybody's weight (players will go to 1) */
+        for(var i in playerNames) {
+            playerToSchedWeight[playerNames[i]] *= 3
+        }
+
+        /* players that just played adopt weight 1 */
         for(var i in names) {
-            schedRemovePlayer(names[i])
-            schedAddPlayer(names[i])
+            playerToSchedWeight[names[i]] = 1
         }
+    
+        schedRecalcProbabilities()
     }
 }
 
-function schedNameToDisplayElem(who)
+function schedRecalcProbabilities()
 {
-    var re = new RegExp('.*' + who + '.*')
-    var disp = undefined
+    /* calculate total weights (divisor) */
+    var total = 0
+    for(var i in playerNames) {
+        total += playerToSchedWeight[playerNames[i]]
+    }
 
-    /* resolve display element for this guy */
-    for(var i in schedDisplayElems) {
-        var m = schedDisplayElems[i].innerHTML.match(re)
-        if(m) {
-            disp = schedDisplayElems[i]
-            break
+    /* calculate percentage weight for each player */
+    for(var i in playerNames) {
+        var whom = playerNames[i]
+        var weight = playerToSchedWeight[whom]
+        if(weight && (total>=4)) {
+            //var prob = 1 - Math.pow((total-weight)/total, 4)
+            var prob = weight/total
+            playerToSchedProbabilityElem[whom].innerHTML =
+                '<font size=large color=red>' + Math.round((prob*100)*100)/100 + '% </font>'
         }
+        else {
+            playerToSchedProbabilityElem[whom].innerHTML = ''
+        } 
     }
-
-    if(disp == undefined) {
-        alert("couldn't located player " + who + " in scheduler slots")
-    }
-
-    return disp
-}
-
-function schedRemovePlayer(who)
-{
-    var disp = schedNameToDisplayElem(who)
-
-    /* get rank */
-    m = disp.innerHTML.match(/(\d+)/)
-    var rank = parseInt(m[1])
-
-    /* remove this guy's number */ 
-    var m = disp.innerHTML.match(/<\/font>(.*)/)
-    disp.innerHTML = m[1]
-
-    /* advance everyone behind him */
-    for(var i in schedDisplayElems) {
-        var m = schedDisplayElems[i].innerHTML.match(/(.*?)(\d+). (.*)/)
-
-        if(m) {
-            if (parseInt(m[2]) > rank) {
-                schedDisplayElems[i].innerHTML = m[1] + (parseInt(m[2])-1) + '. ' + m[3]
-            }
-        }
-    }
-}
-
-function schedAddPlayer(who)
-{
-    var disp = schedNameToDisplayElem(who)
-
-    var max = 0
-
-    /* find end of the queue */
-    for(var i in schedDisplayElems) {
-        var m = schedDisplayElems[i].innerHTML.match(/(.*?)(\d+)(.*)/)
-
-        if(m) {
-            max = Math.max(max, m[2])
-        }
-    }
-
-    disp.innerHTML = '<font size=large color=red>' + (max+1) + 
-        '. </font>' + disp.innerHTML
 }
 
 function schedTogglePlayer(elem, who)
 {
     if(elem.checked == true) {
-        schedAddPlayer(who)   
+        playerToSchedWeight[who] = 1
     }
     else {
-        schedRemovePlayer(who)
+        playerToSchedWeight[who] = 0
     }
+
+    schedRecalcProbabilities()
 }
 
-function schedGetHead() {
-    var names = []
+function schedGetHead(names)
+{
+    /* calculate total weights (divisor) */
+    var spinToWinner = []
+    var spin = 0
+    var total = 0
+    for(var i in playerNames) {
+        var name = playerNames[i]
+        var weight = playerToSchedWeight[name]
 
-    /* find the current 4 */
-    for(var i in schedDisplayElems) {
-        var m = schedDisplayElems[i].innerHTML.match(/^.*?(\d+).(.*)/)
-        if(m) {
-            val = parseInt(m[1])
-            if(val == 1 || val == 2 || val == 3 || val == 4) {
-                m = schedDisplayElems[i].innerHTML.match(/<\/font>(.*)/)
-                names.push(m[1])
-            }
+        for(var j=0; j<weight; ++j) {
+            spinToWinner[spin++] = name
         }
+        
+        total += weight
     }
 
-    if(names.length != 4) {
-        //alert("ERROR: less than 4 people scheduled!")
+    if(total < 4) {
+        alert("ERROR: less than 4 players scheduled!")
         return
     }
+
+    /* random spin across the total */
+    var winners = new Array(0)
+    while(winners.length < 4) {
+        var spin = Math.floor(Math.random() * 1000000) % total
    
-    return names;
+        who = spinToWinner[spin]
+
+        if(winners.indexOf(who) == -1) {
+            winners.push(who)
+        }
+    }
+ 
+    return winners
 }
 
 function schedLoadPlayers(names)
 {
-    /* load them into the player slots 
-        by convention: left board is 0,1 and right board is 2,3 */
+    /* load them into the player slots */
     elem_A.value = names[0]
     elem_b.value = names[1]
     elem_B.value = names[2]
@@ -511,19 +496,9 @@ function schedLoadPlayers(names)
     
 function schedLoadPlayersRandom()
 {
-    var names = schedGetHead()
+    names = schedGetHead()
 
     if(names) {
-        /* scramble the names */
-        for(var i=0; i<8; ++i) {
-            j = Math.floor((Math.random()*4))
-            k = Math.floor((Math.random()*4))
-
-            var temp = names[j] 
-            names[j] = names[k]
-            names[k] = temp
-        }
- 
         schedLoadPlayers(names);
     }
 }
@@ -539,8 +514,8 @@ function schedLoadPlayersFair()
     names = [names[0], names[3], names[1], names[2]]
 
     /* randomly flip black/white */
-    if(Math.floor(Math.random()*2)) {
-        names = repositionColor(names)
+    if(Math.random() > .5) {
+        names = [names[1], names[0], names[3], names[2]]
     }
 
     schedLoadPlayers(names);
