@@ -192,14 +192,27 @@ function repositionColor(a) {
 /******************************************************************************
  * inner-mode functions
  *****************************************************************************/
-function hideAllBut(e, elems) {
-    for(var i in elems) {
-        if(elems[i] == e) {
-            elems[i].style.display = 'block'
+function isHidden(elem) {
+    return elem.style.display == 'none'
+}
+
+function hide(elem) {
+    elem.style.display = 'none'
+}
+
+function unHide(elem) {
+    elem.style.display = 'block'
+}
+
+function hideAllBut(included, all) {
+    for(var i in all) {
+        /* if in the included array, display */
+        if(included.indexOf(all[i]) >= 0) {
+            all[i].style.display = 'block'
         }
+        /* otherwise, hide */
         else {
-            elems[i].style.display = 'none'
+            all[i].style.display = 'none'
         }
     }
 }
-

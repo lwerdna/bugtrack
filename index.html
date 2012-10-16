@@ -17,7 +17,7 @@
 <div class="menu">
  BugTrack: 
  <input type=submit class="menu" onclick="showPlay()" value="Play" />
- <input type=submit class="menu" onclick="showScheduler()" value="Scheduler" />
+ <input type=submit class="menu" onclick="toggleScheduler()" value="Scheduler" />
  <input type=submit class="menu" onclick="showGamesList()" value="Games History" />
  <input type=submit class="menu" onclick="window.open('stats.html', '_newtab' + Math.floor(Math.random()*999999999))" value="Stats" />
 
@@ -91,10 +91,13 @@
 
 <!-- MODE: SCHEDULER -->
 <div id="scheduler" style="margin: 1em">
- <input type=submit value="Load Fair" onclick=schedLoadPlayersFair() />
- <input type=submit value="Load Random" onclick=schedLoadPlayersRandom() />
- <h2>Choose present players:</h2>
+ <h3 style="margin-bottom: 0px">Scheduler:</h3>
+ <hr>
  <div id="schedulerPlayerList"></div>
+ <hr>
+ <input type=submit value="Fair" onclick=schedLoadPlayersFair() />
+ <input type=submit value="Random" onclick=schedLoadPlayersRandom() />
+ <input type=submit value="Seal Club" onclick=schedLoadPlayersUnfair() />
 </div>
 
 <!-- MODE: GAMES LIST -->

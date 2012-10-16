@@ -8,6 +8,10 @@ body {
     background-color: #F5F4EB;
 }
 
+h3 {
+    margin-bottom: 0px;
+}
+
 input {
     display: inline;
 }

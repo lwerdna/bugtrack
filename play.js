@@ -111,7 +111,7 @@ function playInit(x) {
     /* populate the scheduler display html */
     var html = '<table><tr>'
     for(var j in playerNames) {
-        if(!(j%3)) {
+        if(!(j%4)) {
             html += '</tr><tr>'
         }
         html += '<td>'
@@ -138,21 +138,31 @@ function playInit(x) {
 }
 
 function showPlay() {
-    hideAllBut(document.getElementById('play'), showElems)
+    hideAllBut([document.getElementById('play')], showElems)
 }
 
-function showScheduler() {
-    hideAllBut(document.getElementById('scheduler'), showElems)
+function toggleScheduler() {
+    eSched = document.getElementById('scheduler')
+
+    /* if hidden */
+    if(isHidden(eSched)) {
+        /* show only {play, scheduler} */
+        hideAllBut([document.getElementById('play'), eSched], showElems);
+    }
+    /* if visible, just hide it */
+    else {
+        hide(eSched);
+    }
 }
 
 function showGamesList() {
-    hideAllBut(document.getElementById('games'), showElems)
+    hideAllBut([document.getElementById('games')], showElems)
 
     loadGamesList()
 }
 
 function showAdmin() {
-    hideAllBut(document.getElementById('admin'), showElems)
+    hideAllBut([document.getElementById('admin')], showElems)
 }
 
 /******************************************************************************
@@ -419,7 +429,7 @@ function schedRecalcProbabilities()
             //var prob = 1 - Math.pow((total-weight)/total, 4)
             var prob = weight/total
             playerToSchedProbabilityElem[whom].innerHTML =
-                '<font size=large color=red>' + Math.round((prob*100)*100)/100 + '% </font>'
+                '<font size=large color=red>' + Math.round(prob*100) + '% </font>'
         }
         else {
             playerToSchedProbabilityElem[whom].innerHTML = ''
@@ -478,6 +488,11 @@ function schedGetHead(names)
 
 function schedLoadPlayers(names)
 {
+    /* randomly choose black/white */
+    if(Math.random() > .5) {
+        names = [names[1], names[0], names[3], names[2]]
+    }
+
     /* load them into the player slots */
     elem_A.value = names[0]
     elem_b.value = names[1]
@@ -489,14 +504,11 @@ function schedLoadPlayers(names)
     selChange_cb(elem_b)
     selChange_cb(elem_B)
     selChange_cb(elem_a)
-
-    /* show the play screen */
-    showPlay()
 }
     
 function schedLoadPlayersRandom()
 {
-    names = schedGetHead()
+    var names = schedGetHead()
 
     if(names) {
         schedLoadPlayers(names);
@@ -507,19 +519,30 @@ function schedLoadPlayersFair()
 {
     var names = schedGetHead()
 
-    /* sort names, best to worst */
-    names.sort(function(a,b) { return playerToR[b]-playerToR[a] })
+    if(names) {
+        /* sort names, best to worst */
+        names.sort(function(a,b) { return playerToR[b] - playerToR[a] })
 
-    /* 0,3 vs. 1,2 */
-    names = [names[0], names[3], names[1], names[2]]
+        /* 0,3 vs. 1,2 */
+        names = [names[0], names[3], names[1], names[2]]
 
-    /* randomly flip black/white */
-    if(Math.random() > .5) {
-        names = [names[1], names[0], names[3], names[2]]
+        schedLoadPlayers(names);
     }
-
-    schedLoadPlayers(names);
 }
+
+function schedLoadPlayersUnfair()
+{
+    var names = schedGetHead()
+
+    if(names) {
+        /* sort names, best to worst */
+        names.sort(function(a,b) { return playerToR[b]-playerToR[a] })
+
+        /* default order is A,b,B,a so [0],[1] slots (top 2) already on team */
+        schedLoadPlayers(names);
+    }
+}
+
 
 /******************************************************************************
  * GAMES LIST MODE

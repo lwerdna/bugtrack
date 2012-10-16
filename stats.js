@@ -74,7 +74,7 @@ function statsInit(x) {
 }
 
 function showStats() {
-    hideAllBut(document.getElementById('stats'), showElems)
+    hideAllBut([document.getElementById('stats')], showElems)
 
     // each graph has a function dedicated to loading it...
     loadLeaderBoard()
@@ -83,7 +83,7 @@ function showStats() {
 }
 
 function showIStats() {
-    hideAllBut(document.getElementById('istats'), showElems)
+    hideAllBut([document.getElementById('istats')], showElems)
 
     // graphs don't load until user makes player selection 
 }
