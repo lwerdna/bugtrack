@@ -449,7 +449,7 @@ function schedTogglePlayer(elem, who)
     schedRecalcProbabilities()
 }
 
-function schedGetHead(names)
+function schedGetHead()
 {
     /* calculate total weights (divisor) */
     var spinToWinner = []
@@ -543,6 +543,48 @@ function schedLoadPlayersUnfair()
     }
 }
 
+function schedLoadIntoEmpty()
+{
+    /* collect the players currently sitting */
+    var current = []
+    var empties = [] 
+    for(var i in playerElems) {
+        if(playerElems[i].value) {
+            current.push(playerElems[i].value)
+        }
+        else {
+            empties.push(playerElems[i])
+        }
+    }
+
+    if(current.length == 4) {
+        return;
+    }
+
+    /* get the replacements */
+    var replacements = []
+    var head = schedGetHead()
+    for(var i in head) {
+        /* is currently sitting? skip */
+        if(current.indexOf(head[i]) >= 0) {
+            continue;
+        }
+
+        /* else is valid replacement */
+        replacements.push(head[i])
+    }
+
+    if(replacements.length < empties.length) {
+        alert("ERROR: scheduler provides " + replacements.length + " to fill " + empties.length + " chairs!")
+        return;
+    }
+
+    /* finally, seat them, update stats */
+    for(var i=0; i<empties.length; ++i) {
+        empties[i].value = replacements[i]
+        selChange_cb(empties[i])
+    }
+}
 
 /******************************************************************************
  * GAMES LIST MODE

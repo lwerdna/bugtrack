@@ -189,6 +189,20 @@ function repositionColor(a) {
     return [a[1], a[0], a[3], a[2]]
 }
 
+function scrambleArray(a) {
+    var swaps = a.length * 2
+
+    for(var i=0; i<swaps; ++i) {
+        var src = Math.round(Math.random() * (a.length - 1))
+        var dst = Math.round(Math.random() * (a.length - 1))
+        var t = a[src]
+        a[src] = a[dst]
+        a[dst] = t
+    }
+
+    return a
+}
+
 /******************************************************************************
  * inner-mode functions
  *****************************************************************************/
